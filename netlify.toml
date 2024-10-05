@@ -1,5 +1,5 @@
 [[redirects]]
-  from = "/api"
+  from = "/api/**"
   to = "https://lks.bmstu.ru/lks-back/api"
   status = 200
 
