@@ -1,0 +1,10 @@
+{
+  "/api/**": {
+    "target": "https://lks.bmstu.ru/lks-back/api",
+    "pathRewrite":{
+      "^/api": ""
+    },
+    "secure": false,
+    "changeOrigin": true
+  }
+}

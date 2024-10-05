@@ -1,0 +1,14 @@
+<p-card *ngIf="pair">
+  <div>
+    <i class="pi pi-book"></i>
+    <span>{{ pair.discipline.shortName }} ({{ pair.discipline.actType }})</span>
+  </div>
+  <div>
+    <i class="pi pi-users"></i>
+    <span>{{ pair.stream }}</span>
+  </div>
+  <div>
+    <i class="pi pi-calendar-clock"></i>
+    <span>{{ getDay(pair.day) }} {{ pair.week }} {{ pair.startTime }} - {{ pair.endTime }}</span>
+  </div>
+</p-card>
