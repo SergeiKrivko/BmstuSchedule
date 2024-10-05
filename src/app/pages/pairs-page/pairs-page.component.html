@@ -1,0 +1,27 @@
+<div class="home-container">
+  <div class="back-button" routerLink="/home">
+    <i class="pi pi-arrow-left"></i>
+    <span>Назад</span>
+  </div>
+  <p-card [formGroup]="formGroup">
+    <div class="current-teacher-container">
+      <i class="pi pi-user"></i>
+      <h1>{{ this.currentTeacher?.fullName }}</h1>
+    </div>
+<!--    <p-dropdown-->
+<!--      [options]="teachers"-->
+<!--      formControlName="teacher"-->
+<!--      [filter]="true"-->
+<!--      filterBy="fullName"-->
+<!--      [checkmark]="true"-->
+<!--      optionLabel="fullName"-->
+<!--      placeholder="Преподаватель"/>-->
+  </p-card>
+  <p-card>
+    <div class="items-container">
+      @for (pair of pairs$ | async; track pair) {
+        <app-pair-item [pair]="pair"></app-pair-item>
+      }
+    </div>
+  </p-card>
+</div>

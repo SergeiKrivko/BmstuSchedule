@@ -1,44 +1,41 @@
-import {Component, inject, OnInit} from '@angular/core';
-import {DropdownModule} from "primeng/dropdown";
-import {ScheduleService} from "../../core/schedule.service";
-import {Teacher} from "../../core/models/teacher";
-import {FormControl, FormGroup, ReactiveFormsModule} from "@angular/forms";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
-import {BrowserModule} from "@angular/platform-browser";
-import {CardModule} from "primeng/card";
-import {EMPTY, switchMap, tap} from "rxjs";
+import {ChangeDetectionStrategy, Component, inject} from '@angular/core';
+import {InputTextModule} from "primeng/inputtext";
 import {AsyncPipe} from "@angular/common";
+import {CardModule} from "primeng/card";
+import {DropdownModule} from "primeng/dropdown";
+import {PaginatorModule} from "primeng/paginator";
 import {PairItemComponent} from "../../shared/pair-item/pair-item.component";
+import {FormControl, ReactiveFormsModule} from "@angular/forms";
+import {ScheduleService} from "../../core/schedule.service";
+import {TeacherItemComponent} from "../../shared/teacher-item/teacher-item.component";
 
 @Component({
   selector: 'app-home-page',
   standalone: true,
   imports: [
-    DropdownModule,
-    ReactiveFormsModule,
-    CardModule,
+    InputTextModule,
     AsyncPipe,
+    CardModule,
+    DropdownModule,
+    PaginatorModule,
     PairItemComponent,
+    ReactiveFormsModule,
+    TeacherItemComponent
   ],
   templateUrl: './home-page.component.html',
-  styleUrl: './home-page.component.scss'
+  styleUrl: './home-page.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomePageComponent implements OnInit {
-
+export class HomePageComponent {
   private readonly scheduleService = inject(ScheduleService);
+  protected readonly teachers$ = this.scheduleService.teachers$;
 
-  protected teachers: Teacher[] = [];
-  protected readonly formGroup = new FormGroup({
-    teacher: new FormControl<Teacher | null>(null),
-  })
-  protected readonly pairs$ = this.scheduleService.pairs$;
+  protected readonly lastNameControl = new FormControl<string>('');
 
-  ngOnInit() {
-    this.scheduleService.loadTeachers().subscribe(teachers => this.teachers = teachers);
-    this.formGroup.get('teacher')?.valueChanges.pipe(
-      tap(teacher => this.scheduleService.setTeacher(teacher?.id ?? null))
-    ).subscribe()
-    // this.scheduleService.currentTeacher$.subscribe(teacher => console.log(`Current teacher ${teacher}`));
+  onLastNameChanged() {
+    console.log("Last name changed")
+    if (this.lastNameControl.value) {
+      this.scheduleService.loadTeachers(this.lastNameControl.value).subscribe()
+    }
   }
-
 }

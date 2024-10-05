@@ -1,18 +1,11 @@
 <div class="home-container">
-  <p-card [formGroup]="formGroup">
-    <p-dropdown
-      [options]="teachers"
-      formControlName="teacher"
-      [filter]="true"
-      filterBy="fullName"
-      [checkmark]="true"
-      optionLabel="fullName"
-      placeholder="Преподаватель"/>
+  <p-card>
+    <input pInputText placeholder="Фамилия преподавателя..." [formControl]="lastNameControl" (blur)="onLastNameChanged()">
   </p-card>
   <p-card>
-    <div class="items-container">
-      @for (pair of pairs$ | async; track pair) {
-        <app-pair-item [pair]="pair"></app-pair-item>
+    <div class="teachers-container">
+      @for (teacher of teachers$ | async; track teacher) {
+        <app-teacher-item [teacher]="teacher"></app-teacher-item>
       }
     </div>
   </p-card>

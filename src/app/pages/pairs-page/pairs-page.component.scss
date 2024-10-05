@@ -1,0 +1,39 @@
+:host {
+  .home-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+
+    .back-button {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      align-items: center;
+      color: var(--blue-500);
+      cursor: pointer;
+
+      i {
+        font-size: 1.5rem;
+      }
+    }
+
+    .current-teacher-container {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      align-items: center;
+
+      i {
+        font-size: 2rem;
+      }
+    }
+
+    .items-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+}
