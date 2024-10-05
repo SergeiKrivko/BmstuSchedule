@@ -1,19 +1,9 @@
 [[redirects]]
-  from = "/api/"
-  to = "https://lks.bmstu.ru/lks-back/api"
-  status = 200
-
-[[redirects]]
   from = "/api/*"
-  to = "https://lks.bmstu.ru/lks-back/api"
+  to = "https://lks.bmstu.ru/lks-back/api/:splat"
   status = 200
 
 [[redirects]]
-  from = "/api/**"
-  to = "https://lks.bmstu.ru/lks-back/api"
-  status = 200
-
-[[redirects]]
-  from = "/home"
+  from = "/*"
   to = "/"
   status = 200
