@@ -1,0 +1,9 @@
+[[redirects]]
+  from = "/api"
+  to = "https://lks.bmstu.ru/lks-back/api"
+  status = 200
+
+[[redirects]]
+  from = "/home"
+  to = "/"
+  status = 200
