@@ -10,8 +10,10 @@
       placeholder="Преподаватель"/>
   </p-card>
   <p-card>
-    @for (pair of pairs$ | async; track pair) {
-      <app-pair-item [pair]="pair"></app-pair-item>
-    }
+    <div class="items-container">
+      @for (pair of pairs$ | async; track pair) {
+        <app-pair-item [pair]="pair"></app-pair-item>
+      }
+    </div>
   </p-card>
 </div>

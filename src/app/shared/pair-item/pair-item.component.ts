@@ -20,6 +20,32 @@ export class PairItemComponent {
   @Input() teacher: Teacher | undefined;
 
   getDay(day: number): string | undefined {
-    return ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'][day];
+    return ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'][day - 1];
+  }
+
+  getWeek(week: string): string | undefined {
+    switch (week) {
+      case 'all':
+        return '';
+      case 'ch':
+        return '(числитель)';
+      case 'zn':
+        return '(знаменатель)';
+      default:
+        return undefined
+    }
+  }
+
+  getActType(actType: string): string {
+    switch (actType) {
+      case 'lecture':
+        return 'лекция';
+      case 'seminar':
+        return 'семинар';
+      case 'lab':
+        return 'лабораторная';
+      default:
+        return actType
+    }
   }
 }

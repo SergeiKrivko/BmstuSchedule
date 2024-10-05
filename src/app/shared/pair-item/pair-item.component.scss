@@ -1,0 +1,22 @@
+:host {
+  .pair-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    border: 1px solid var(--gray-500);
+    border-radius: 6px;
+    padding: 10px;
+
+    .pair-data {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+    }
+  }
+
+  .pair-item:hover {
+    border: 1px solid var(--blue-500);
+    color: var(--blue-500);
+  }
+}
