@@ -38,10 +38,6 @@ export class PairsPageComponent implements OnInit {
     this.scheduleService.currentTeacher$.pipe(
       tap(currentTeacher => this.currentTeacher = currentTeacher)
     ).subscribe();
-    // this.formGroup.get('teacher')?.valueChanges.pipe(
-    //   tap(teacher => this.scheduleService.setTeacher(teacher?.id ?? null))
-    // ).subscribe()
-    // this.scheduleService.currentTeacher$.subscribe(teacher => console.log(`Current teacher ${teacher}`));
   }
 
 }
