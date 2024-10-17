@@ -1,12 +1,18 @@
 <div class="home-container">
   <p-card>
-    <input pInputText placeholder="Фамилия преподавателя..." [formControl]="lastNameControl" (blur)="onLastNameChanged()">
+    <input pInputText placeholder="Фамилия преподавателя..." [formControl]="lastNameControl">
   </p-card>
   <p-card>
-    <div class="teachers-container">
-      @for (teacher of teachers$ | async; track teacher) {
-        <app-teacher-item [teacher]="teacher"></app-teacher-item>
-      }
-    </div>
+    @if (!loading) {
+      <div class="teachers-container">
+        @for (teacher of teachers$ | async; track teacher) {
+          <app-teacher-item [teacher]="teacher"></app-teacher-item>
+        }
+      </div>
+    } @else {
+      <div class="spinner-container">
+        <p-progressSpinner />
+      </div>
+    }
   </p-card>
 </div>
