@@ -4,6 +4,10 @@
     <span>{{ getDay(pair.day) }} {{ getWeek(pair.week) }} {{ pair.startTime }} - {{ pair.endTime }}</span>
   </div>
   <div class="pair-data">
+    <i class="pi pi-map-marker"></i>
+    <span>{{ getAudiences(pair.audiences) }}</span>
+  </div>
+  <div class="pair-data">
     <i class="pi pi-book"></i>
     <span>{{ pair.discipline.shortName }} ({{ getActType(pair.discipline.actType) }})</span>
   </div>

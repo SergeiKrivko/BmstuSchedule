@@ -1,4 +1,4 @@
-interface Audience {
+export interface Audience {
   uuid: string;
   name: string;
 }

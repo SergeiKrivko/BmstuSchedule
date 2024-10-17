@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
 import {Teacher} from "../../core/models/teacher";
 import {CardModule} from "primeng/card";
-import {Pair} from "../../core/models/pair";
+import {Audience, Pair} from "../../core/models/pair";
 import {NgIf} from "@angular/common";
 
 @Component({
@@ -21,6 +21,12 @@ export class PairItemComponent {
 
   getDay(day: number): string | undefined {
     return ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'][day - 1];
+  }
+
+  getAudiences(audiences: Audience[]): string | undefined {
+    const lst: string[] = [];
+    audiences.forEach(a => lst.push(a.name));
+    return lst.join(', ');
   }
 
   getWeek(week: string): string | undefined {
