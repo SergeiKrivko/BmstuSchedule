@@ -5,11 +5,11 @@ services:
     expose:
       - 5432
     ports:
-      - 5433:5432
+      - "${DB__PORT}:5432"
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB__NAME}
+      - POSTGRES_USER=${DB__USER}
+      - POSTGRES_PASSWORD=${DB__PASS}
     networks:
       - bmstu_schedule_net
 

@@ -56,7 +56,7 @@ run-api: ## Run app
 	ENV=local $(POETRY_RUN) uvicorn app.api.app:create_app
 
 run-environment: ## Run environment
-	docker-compose up -d
+	@export $$(cat envs/common.env | xargs); export $$(cat envs/local.env | xargs); docker compose up -d
 
 stop-environment: ## Stop environment
-	docker-compose down
+	@export $$(cat envs/common.env | xargs); export $$(cat envs/local.env | xargs); docker compose down
