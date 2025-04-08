@@ -11,15 +11,16 @@ from app.clients.lks.models import (
     ScheduleResponseBody,
     StructureResponseBody,
 )
+from app.settings import LksSettings, lks_settings
 
 
 class LksClient:
-    def __init__(self) -> None:
-        self.__base_url = "https://lks.bmstu.ru/lks-back/api/v1/"
-        self.__verify_ssl = False
+    def __init__(self, settings: LksSettings) -> None:
+        self.__base_url = settings.base_api_url
+        self.__use_ssl = settings.use_ssl
 
     def __get_session(self) -> aiohttp.ClientSession:
-        connector = aiohttp.TCPConnector(ssl=self.__verify_ssl)
+        connector = aiohttp.TCPConnector(ssl=self.__use_ssl)
         return aiohttp.ClientSession(
             base_url=self.__base_url,
             connector=connector,
@@ -51,4 +52,6 @@ class LksClient:
 
 @lru_cache(maxsize=1)
 def get_lks_client() -> LksClient:
-    return LksClient()
+    settings = lks_settings()
+
+    return LksClient(settings=settings)

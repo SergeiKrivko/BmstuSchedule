@@ -1,4 +1,3 @@
-from typing import List
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -8,7 +7,7 @@ class Node(BaseModel):
     abbr: str
     name: str
     id: UUID = Field(alias="uuid")
-    children: List["Node"]
+    children: list["Node"]
     type: str = Field(alias="nodeType")
 
 
@@ -33,9 +32,9 @@ class Discipline(BaseModel):
 
 
 class Pair(BaseModel):
-    groups: List[Group]
-    audiences: List[Audience]
-    teachers: List[Teacher]
+    groups: list[Group]
+    audiences: list[Audience]
+    teachers: list[Teacher]
     discipline: Discipline
     day: int
     time: int
@@ -45,9 +44,9 @@ class Pair(BaseModel):
 
 
 class Schedule(BaseModel):
-    id: UUID = Field(..., alias="uuid")
+    id: UUID = Field(alias="uuid")
     title: str
-    data: List[Pair] = Field(..., alias="schedule")
+    data: list[Pair] = Field(alias="schedule")
 
 
 class StructureResponseBody(BaseModel):
