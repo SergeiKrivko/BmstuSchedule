@@ -9,7 +9,7 @@ on:
       - '.github/workflows/dev_api.yml'
 
 env:
-  IMAGE_NAME: 'ghcr.io/sergeikrivko/bmstuschedule/api'
+  IMAGE_NAME: 'ghcr.io/sergeikrivko/bmstuschedule'
 
 jobs:
   build-and-push:
@@ -33,20 +33,16 @@ jobs:
         working-directory: api
         run: make install
 
-      - name: Run environment
-        working-directory: api
-        run: make run-environment
-
       - name: Format, lint and test
         working-directory: api
-        run: make check
+        run: make run-environment && make check
 
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Docker image
         working-directory: api
-        run: docker build -t '${{ env.IMAGE_NAME }}:latest' .
+        run: docker build -t '${{ env.IMAGE_NAME }}:api-latest' .
 
       - name: Publish Docker image to GHCR
-        run: docker push '${{ env.IMAGE_NAME }}:latest'
+        run: docker push '${{ env.IMAGE_NAME }}:api-latest'
