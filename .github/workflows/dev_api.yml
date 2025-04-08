@@ -53,7 +53,7 @@ jobs:
       - name: Build and push runtime Docker image
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
-          context: .
+          context: api
           push: true
           tags: '${{ env.IMAGE_NAME }}:api-dev'
           labels: ${{ steps.meta.outputs.labels }}
