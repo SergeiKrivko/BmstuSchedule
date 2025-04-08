@@ -7,6 +7,9 @@ on:
     paths:
       - 'api/**'
 
+env:
+  IMAGE_NAME: ghcr.io/sergeikrivko/bmstuschedule/api
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -42,7 +45,7 @@ jobs:
 
       - name: Build Docker image
         working-directory: api
-        run: docker build -t ghcr.io/${{ github.repository }}/api:latest .
+        run: docker build -t ${{ env.IMAGE_NAME }}:latest .
 
       - name: Publish Docker image to GHCR
-        run: docker push ghcr.io/${{ github.repository }}/api:latest
+        run: docker push ${{ env.IMAGE_NAME }}:latest
