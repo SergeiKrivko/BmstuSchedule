@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - 'api/**'
+      - '.github/workflows/dev_api.yml'
 
 env:
   IMAGE_NAME: 'ghcr.io/sergeikrivko/bmstuschedule/api'
