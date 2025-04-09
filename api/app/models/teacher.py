@@ -15,7 +15,9 @@ class Teacher(Base, SyncMixin):
     __tablename__ = "teachers"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    first_name: Mapped[str] = mapped_column(String, nullable=False)
+    middle_name: Mapped[str] = mapped_column(String, nullable=False)
+    last_name: Mapped[str] = mapped_column(String, nullable=False)
 
     schedule_pairs: Mapped[list["SchedulePair"]] = relationship(
         "SchedulePair",

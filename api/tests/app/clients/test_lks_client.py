@@ -52,7 +52,14 @@ async def test_get_schedule(lks_client: LksClient) -> None:
                 {
                     "groups": [{"uuid": str(uuid.uuid4()), "name": "IU7-65"}],
                     "audiences": [{"uuid": str(uuid.uuid4()), "name": "101"}],
-                    "teachers": [{"uuid": str(uuid.uuid4()), "name": "Dr. Smith"}],
+                    "teachers": [
+                        {
+                            "uuid": str(uuid.uuid4()),
+                            "firstName": "Наталья",
+                            "middleName": "Юрьевна",
+                            "lastName": "Рязанова",
+                        },
+                    ],
                     "discipline": {"uuid": str(uuid.uuid4()), "name": "Math"},
                     "day": 1,
                     "time": 2,

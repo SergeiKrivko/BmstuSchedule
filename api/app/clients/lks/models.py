@@ -24,7 +24,9 @@ class Audience(BaseModel):
 
 class Teacher(BaseModel):
     id: UUID = Field(alias="uuid")
-    name: str
+    first_name: str = Field(alias="firstName")
+    middle_name: str = Field(alias="middleName")
+    last_name: str = Field(alias="lastName")
 
 
 class Discipline(BaseModel):
