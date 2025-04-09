@@ -4,7 +4,7 @@ import pytest
 from aioresponses import aioresponses
 
 from app.clients.lks.client import LksClient, get_lks_client
-from app.clients.lks.models import Node, Schedule
+from app.clients.lks.models import Schedule, StructureNode
 
 pytestmark = pytest.mark.asyncio
 
@@ -32,7 +32,7 @@ async def test_get_structure(lks_client: LksClient) -> None:
             payload=mocked_response,
         )
 
-        structure: Node = await lks_client.get_structure()
+        structure: StructureNode = await lks_client.get_structure()
 
         assert structure.id == structure_id
         assert structure.abbr == "RootAbbr"

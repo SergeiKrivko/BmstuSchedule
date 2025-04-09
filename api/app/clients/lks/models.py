@@ -4,11 +4,11 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
-class Node(BaseModel):
+class StructureNode(BaseModel):
     abbr: str
     name: str
     id: UUID = Field(alias="uuid")
-    children: list["Node"]
+    children: list["StructureNode"]
     type: Optional[str] = Field(None, alias="nodeType")
 
 
@@ -18,8 +18,10 @@ class Group(BaseModel):
 
 
 class Audience(BaseModel):
-    id: UUID = Field(alias="uuid")
+    id: Optional[UUID] = Field(None, alias="uuid")
     name: str
+    building: Optional[str] = None
+    structure_node_id: Optional[str] = Field(None, alias="department_uid")
 
 
 class Teacher(BaseModel):
@@ -53,7 +55,7 @@ class Schedule(BaseModel):
 
 
 class StructureResponseBody(BaseModel):
-    data: Node
+    data: StructureNode
 
 
 class ScheduleResponseBody(BaseModel):

@@ -6,9 +6,9 @@ import aiohttp
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from app.clients.lks.models import (
-    Node,
     Schedule,
     ScheduleResponseBody,
+    StructureNode,
     StructureResponseBody,
 )
 from app.settings import LksSettings, lks_settings
@@ -35,7 +35,7 @@ class LksClient:
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
     )
-    async def get_structure(self) -> Node:
+    async def get_structure(self) -> StructureNode:
         data = await self._get("structure")
         response = StructureResponseBody.model_validate(data)
         return response.data
