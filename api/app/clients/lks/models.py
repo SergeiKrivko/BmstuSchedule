@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -8,7 +9,7 @@ class Node(BaseModel):
     name: str
     id: UUID = Field(alias="uuid")
     children: list["Node"]
-    type: str = Field(alias="nodeType")
+    type: Optional[str] = Field(None, alias="nodeType")
 
 
 class Group(BaseModel):
