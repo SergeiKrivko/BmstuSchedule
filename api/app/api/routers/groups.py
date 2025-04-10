@@ -3,8 +3,11 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Path, Query
 
-from app.api.schemas.group import GroupBase, GroupList, GroupSchedule
-from app.api.schemas.response import APIResponse
+from app.api.schemas.group import (
+    GroupListResponse,
+    GroupResponse,
+    GroupScheduleResponse,
+)
 
 router = APIRouter()
 
@@ -13,7 +16,7 @@ router = APIRouter()
     "/groups",
     tags=["groups"],
     summary="Get list of groups",
-    response_model=APIResponse[GroupList],
+    response_model=GroupListResponse,
 )
 async def get_groups(
     abbr: Annotated[
@@ -38,7 +41,7 @@ async def get_groups(
     ] = None,
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-) -> APIResponse[GroupList]:
+) -> GroupListResponse:
     raise NotImplementedError
 
 
@@ -46,9 +49,11 @@ async def get_groups(
     "/groups/{group_id}",
     tags=["groups"],
     summary="Get a specific group by ID",
-    response_model=APIResponse[GroupBase],
+    response_model=GroupResponse,
 )
-async def get_group(group_id: int) -> APIResponse[GroupBase]:
+async def get_group(
+    group_id: Annotated[int, Path(description="ID of the group")],
+) -> GroupResponse:
     raise NotImplementedError
 
 
@@ -56,11 +61,11 @@ async def get_group(group_id: int) -> APIResponse[GroupBase]:
     "/{group_id}/schedule",
     tags=["groups"],
     summary="Get schedule for a specific group",
-    response_model=APIResponse[GroupSchedule],
+    response_model=GroupScheduleResponse,
 )
 async def get_group_schedule(
     group_id: int = Path(description="ID of the group"),
     dt_from: Annotated[Optional[datetime], Query(description="Start datetime")] = None,
     dt_to: Annotated[Optional[datetime], Query(description="End datetime")] = None,
-) -> APIResponse[GroupSchedule]:
+) -> GroupScheduleResponse:
     raise NotImplementedError

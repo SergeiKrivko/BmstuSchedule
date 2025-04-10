@@ -1,10 +1,13 @@
 from datetime import datetime
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Path, Query
 
-from app.api.schemas.response import APIResponse
-from app.api.schemas.room import RoomBase, RoomList, RoomSchedule
+from app.api.schemas.room import (
+    RoomListResponse,
+    RoomResponse,
+    RoomScheduleResponse,
+)
 from app.domain.day_of_week import DayOfWeek
 
 router = APIRouter()
@@ -14,7 +17,7 @@ router = APIRouter()
     "/rooms",
     tags=["rooms"],
     summary="Get list of rooms",
-    response_model=APIResponse[RoomList],
+    response_model=RoomListResponse,
 )
 async def get_rooms(
     building: Annotated[
@@ -23,7 +26,7 @@ async def get_rooms(
     ] = None,
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-) -> APIResponse[RoomList]:
+) -> RoomListResponse:
     raise NotImplementedError
 
 
@@ -31,9 +34,11 @@ async def get_rooms(
     "/rooms/{room_id}",
     tags=["rooms"],
     summary="Get a specific room by ID",
-    response_model=APIResponse[RoomBase],
+    response_model=RoomResponse,
 )
-async def get_room(room_id: int) -> APIResponse[RoomBase]:
+async def get_room(
+    room_id: Annotated[int, Path(description="ID of the room")],
+) -> RoomResponse:
     raise NotImplementedError
 
 
@@ -41,14 +46,14 @@ async def get_room(room_id: int) -> APIResponse[RoomBase]:
     "/rooms/{room_id}/schedule",
     tags=["rooms"],
     summary="Get schedule for a specific room",
-    response_model=APIResponse[RoomSchedule],
+    response_model=RoomScheduleResponse,
 )
 async def get_room_schedule(
-    room_id: int,
+    room_id: Annotated[int, Path(description="ID of the room")],
     day: Annotated[Optional[DayOfWeek], Query(description="Day of week")] = None,
     dt_from: Annotated[Optional[datetime], Query(description="Start datetime")] = None,
     dt_to: Annotated[Optional[datetime], Query(description="End datetime")] = None,
-) -> APIResponse[RoomSchedule]:
+) -> RoomScheduleResponse:
     raise NotImplementedError
 
 
@@ -56,7 +61,7 @@ async def get_room_schedule(
     "/rooms/free",
     tags=["rooms"],
     summary="Get list of rooms that are free during the specified time period",
-    response_model=APIResponse[RoomList],
+    response_model=RoomListResponse,
 )
 async def get_free_rooms(
     dt_from: Annotated[datetime, Query(description="Start datetime")],
@@ -65,5 +70,5 @@ async def get_free_rooms(
         Optional[str],
         Query(description="Filter rooms by building"),
     ] = None,
-) -> APIResponse[RoomList]:
+) -> RoomListResponse:
     raise NotImplementedError

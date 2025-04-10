@@ -1,10 +1,13 @@
 from datetime import datetime
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Path, Query
 
-from app.api.schemas.response import APIResponse
-from app.api.schemas.teacher import TeacherBase, TeacherList, TeacherSchedule
+from app.api.schemas.teacher import (
+    TeacherListResponse,
+    TeacherResponse,
+    TeacherScheduleResponse,
+)
 
 router = APIRouter()
 
@@ -13,7 +16,7 @@ router = APIRouter()
     "/teachers",
     tags=["teachers"],
     summary="Get list of teachers",
-    response_model=APIResponse[TeacherList],
+    response_model=TeacherListResponse,
 )
 async def get_teachers(
     name: Annotated[
@@ -28,7 +31,7 @@ async def get_teachers(
     ] = None,
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-) -> APIResponse[TeacherList]:
+) -> TeacherListResponse:
     raise NotImplementedError
 
 
@@ -36,9 +39,11 @@ async def get_teachers(
     "/teachers/{teacher_id}",
     tags=["teachers"],
     summary="Get a specific teacher by ID",
-    response_model=APIResponse[TeacherBase],
+    response_model=TeacherResponse,
 )
-async def get_teacher(teacher_id: int) -> APIResponse[TeacherBase]:
+async def get_teacher(
+    teacher_id: Annotated[int, Path(description="ID of the teacher")],
+) -> TeacherResponse:
     raise NotImplementedError
 
 
@@ -46,11 +51,11 @@ async def get_teacher(teacher_id: int) -> APIResponse[TeacherBase]:
     "/teachers/{teacher_id}/schedule",
     tags=["teachers"],
     summary="Get schedule for a specific teacher",
-    response_model=APIResponse[TeacherSchedule],
+    response_model=TeacherScheduleResponse,
 )
 async def get_teacher_schedule(
-    teacher_id: int,
+    teacher_id: Annotated[int, Path(description="ID of the teacher")],
     dt_from: Annotated[Optional[datetime], Query(description="Start datetime")] = None,
     dt_to: Annotated[Optional[datetime], Query(description="End datetime")] = None,
-) -> APIResponse[TeacherSchedule]:
+) -> TeacherScheduleResponse:
     raise NotImplementedError
