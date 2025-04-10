@@ -16,23 +16,26 @@ router = APIRouter()
     response_model=APIResponse[GroupList],
 )
 async def get_groups(
-    abbr: Optional[str] = Query(None, description="Filter groups by abbreviation"),
-    course: Optional[str] = Query(
-        None,
-        description="Filter groups by course abbreviation",
-    ),
-    department: Optional[str] = Query(
-        None,
-        description="Filter groups by department abbreviation",
-    ),
-    faculty: Optional[str] = Query(
-        None,
-        description="Filter groups by faculty abbreviation",
-    ),
-    filial: Optional[str] = Query(
-        None,
-        description="Filter groups by filial abbreviation",
-    ),
+    abbr: Annotated[
+        Optional[str],
+        Query(description="Filter groups by abbreviation"),
+    ] = None,
+    course: Annotated[
+        Optional[str],
+        Query(description="Filter groups by course abbreviation"),
+    ] = None,
+    department: Annotated[
+        Optional[str],
+        Query(description="Filter groups by department abbreviation"),
+    ] = None,
+    faculty: Annotated[
+        Optional[str],
+        Query(description="Filter groups by faculty abbreviation"),
+    ] = None,
+    filial: Annotated[
+        Optional[str],
+        Query(description="Filter groups by filial abbreviation"),
+    ] = None,
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
 ) -> APIResponse[GroupList]:

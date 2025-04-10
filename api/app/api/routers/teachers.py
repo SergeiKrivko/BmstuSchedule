@@ -18,12 +18,11 @@ router = APIRouter()
 async def get_teachers(
     name: Annotated[
         Optional[str],
-        Query(None, description="Filter teachers by any part of full name"),
+        Query(description="Filter teachers by any part of full name"),
     ] = None,
     department: Annotated[
         Optional[str],
         Query(
-            None,
             description="Filter teachers by department abbreviation",
         ),
     ] = None,
