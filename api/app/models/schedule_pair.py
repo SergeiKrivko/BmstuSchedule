@@ -1,7 +1,6 @@
-import uuid
 from typing import List
 
-from sqlalchemy import ForeignKey, Integer, String, Uuid
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.audience import Audience
@@ -19,15 +18,13 @@ from app.models.teacher import Teacher
 class SchedulePair(Base, SyncMixin):
     __tablename__ = "schedule_pairs"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     day: Mapped[int] = mapped_column(Integer, nullable=False)
-    time: Mapped[int] = mapped_column(Integer, nullable=False)
     week: Mapped[str] = mapped_column(String, nullable=False)
     start_time: Mapped[str] = mapped_column(String, nullable=False)
     end_time: Mapped[str] = mapped_column(String, nullable=False)
 
-    discipline_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid,
+    discipline_id: Mapped[int] = mapped_column(
+        Integer,
         ForeignKey("disciplines.id"),
         nullable=False,
     )

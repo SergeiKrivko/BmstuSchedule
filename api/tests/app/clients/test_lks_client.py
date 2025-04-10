@@ -60,10 +60,15 @@ async def test_get_schedule(lks_client: LksClient) -> None:
                             "lastName": "Рязанова",
                         },
                     ],
-                    "discipline": {"uuid": str(uuid.uuid4()), "name": "Math"},
+                    "discipline": {
+                        "uuid": str(uuid.uuid4()),
+                        "abbr": "ВУЦ",
+                        "fullName": "ВУЦ",
+                        "shortName": "ВУЦ",
+                        "actType": "seminar",
+                    },
                     "day": 1,
-                    "time": 2,
-                    "week": "odd",
+                    "week": "ch",
                     "startTime": "09:00",
                     "endTime": "10:30",
                 },
@@ -81,11 +86,10 @@ async def test_get_schedule(lks_client: LksClient) -> None:
 
         assert schedule.id == group_id
         assert schedule.title == "Sample Schedule"
-        assert isinstance(schedule.data, list)
         assert len(schedule.data) == 1
 
         pair = schedule.data[0]
         assert pair.day == 1
         assert pair.start_time == "09:00"
         assert pair.end_time == "10:30"
-        assert pair.discipline.name == "Math"
+        assert pair.discipline.abbr == "ВУЦ"

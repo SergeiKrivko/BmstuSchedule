@@ -1,21 +1,27 @@
-import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Uuid
+from sqlalchemy import ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, SyncMixin
+from app.models.base import AbbrMixin, Base, LksMixin, SyncMixin
+from app.models.course import Course
 from app.models.many_to_many import schedule_pair_group
 
 if TYPE_CHECKING:
     from app.models.schedule_pair import SchedulePair
 
 
-class Group(Base, SyncMixin):
+class Group(Base, LksMixin, AbbrMixin, SyncMixin):
     __tablename__ = "groups"
 
-    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    course_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("courses.id"),
+        nullable=False,
+    )
+    semester_num: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    course: Mapped["Course"] = relationship("Course", back_populates="groups")
 
     schedule_pairs: Mapped[list["SchedulePair"]] = relationship(
         "SchedulePair",

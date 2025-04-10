@@ -1,20 +1,20 @@
-import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import String, Uuid
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, SyncMixin
+from app.models.base import AbbrMixin, Base, LksMixin, SyncMixin
 
 if TYPE_CHECKING:
     from app.models.schedule_pair import SchedulePair
 
 
-class Discipline(Base, SyncMixin):
+class Discipline(Base, LksMixin, AbbrMixin, SyncMixin):
     __tablename__ = "disciplines"
 
-    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    full_name: Mapped[str] = mapped_column(String, nullable=False)
+    short_name: Mapped[str] = mapped_column(String, nullable=False)
+    act_type: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     schedule_pairs: Mapped[list["SchedulePair"]] = relationship(
         "SchedulePair",
