@@ -4,7 +4,7 @@ import pytest
 from aioresponses import aioresponses
 
 from app.clients.lks.client import LksClient, get_lks_client
-from app.clients.lks.models import Node, Schedule
+from app.clients.lks.models import Schedule, StructureNode
 
 pytestmark = pytest.mark.asyncio
 
@@ -32,7 +32,7 @@ async def test_get_structure(lks_client: LksClient) -> None:
             payload=mocked_response,
         )
 
-        structure: Node = await lks_client.get_structure()
+        structure: StructureNode = await lks_client.get_structure()
 
         assert structure.id == structure_id
         assert structure.abbr == "RootAbbr"
@@ -52,11 +52,23 @@ async def test_get_schedule(lks_client: LksClient) -> None:
                 {
                     "groups": [{"uuid": str(uuid.uuid4()), "name": "IU7-65"}],
                     "audiences": [{"uuid": str(uuid.uuid4()), "name": "101"}],
-                    "teachers": [{"uuid": str(uuid.uuid4()), "name": "Dr. Smith"}],
-                    "discipline": {"uuid": str(uuid.uuid4()), "name": "Math"},
+                    "teachers": [
+                        {
+                            "uuid": str(uuid.uuid4()),
+                            "firstName": "Наталья",
+                            "middleName": "Юрьевна",
+                            "lastName": "Рязанова",
+                        },
+                    ],
+                    "discipline": {
+                        "uuid": str(uuid.uuid4()),
+                        "abbr": "ВУЦ",
+                        "fullName": "ВУЦ",
+                        "shortName": "ВУЦ",
+                        "actType": "seminar",
+                    },
                     "day": 1,
-                    "time": 2,
-                    "week": "odd",
+                    "week": "ch",
                     "startTime": "09:00",
                     "endTime": "10:30",
                 },
@@ -74,11 +86,10 @@ async def test_get_schedule(lks_client: LksClient) -> None:
 
         assert schedule.id == group_id
         assert schedule.title == "Sample Schedule"
-        assert isinstance(schedule.data, list)
         assert len(schedule.data) == 1
 
         pair = schedule.data[0]
         assert pair.day == 1
         assert pair.start_time == "09:00"
         assert pair.end_time == "10:30"
-        assert pair.discipline.name == "Math"
+        assert pair.discipline.abbr == "ВУЦ"
