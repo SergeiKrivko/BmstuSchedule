@@ -8,4 +8,5 @@ COPY poetry.lock .
 COPY ./app ./app
 COPY ./envs ./envs
 
-RUN poetry install $(test "$ENVIRONMENT" != local && echo "--only main") --no-interaction --no-ansi
+RUN poetry config virtualenvs.create false && \
+    poetry install $(test "$ENVIRONMENT" != local && echo "--only main") --no-interaction --no-ansi
