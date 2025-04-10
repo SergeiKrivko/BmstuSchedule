@@ -20,7 +20,7 @@ class BaseMixin:
 class SyncMixin:
     sync_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("syncs.id"),
+        ForeignKey("synchronizations.id"),
         nullable=False,
     )
 

@@ -12,7 +12,7 @@ from app.models.many_to_many import (
     schedule_pair_teacher,
 )
 from app.models.schedule_pair import SchedulePair
-from app.models.sync import Sync
+from app.models.synchronization import Synchronization
 from app.models.teacher import Teacher
 
 __all__ = [
@@ -28,8 +28,8 @@ __all__ = [
     "Group",
     "LksMixin",
     "SchedulePair",
-    "Sync",
     "SyncMixin",
+    "Synchronization",
     "Teacher",
     "schedule_pair_audience",
     "schedule_pair_group",

@@ -7,8 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base
 
 
-class Sync(Base):
-    __tablename__ = "syncs"
+class Synchronization(Base):
+    __tablename__ = "synchronizations"
 
     comment: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, nullable=False)
