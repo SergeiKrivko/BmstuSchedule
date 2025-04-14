@@ -215,7 +215,7 @@ async def get_or_create_course_fixture(
     return course
 
 
-@pytest_asyncio.fixture(scope="function", name="get_or_create_group", autouse=True)
+@pytest_asyncio.fixture(scope="function", name="get_or_create_group")
 async def get_or_create_group_fixture(
     db_session_test: AsyncSession,
     get_or_create_sync: Synchronization,
