@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import Depends
 from sqlalchemy import MetaData
@@ -34,9 +34,11 @@ def get_engine() -> AsyncEngine:
 
 
 @lru_cache(maxsize=1)
-def get_session_maker() -> async_sessionmaker[AsyncSession]:
+def get_session_maker(
+    engine: Optional[AsyncEngine] = None,
+) -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(
-        get_engine(),
+        engine or get_engine(),
         class_=AsyncSession,
         expire_on_commit=False,
     )
