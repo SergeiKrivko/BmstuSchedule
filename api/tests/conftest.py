@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator, Optional
+from unittest.mock import AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -58,10 +59,8 @@ async def db_session_test_fixture(
 
 
 @pytest.fixture(name="session_maker_mock")
-def session_maker_mock_fixture(
-    db_engine_test: AsyncEngine,
-) -> ISessionMaker:
-    return get_session_maker(db_engine_test)
+def session_maker_mock_fixture() -> ISessionMaker:
+    return get_session_maker(AsyncMock(spec=AsyncEngine))
 
 
 @pytest_asyncio.fixture(scope="function", name="get_or_create_sync")
