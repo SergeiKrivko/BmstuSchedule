@@ -215,7 +215,7 @@ async def get_or_create_course_fixture(
     return course
 
 
-@pytest_asyncio.fixture(scope="function", name="get_or_create_group", autouse=True)
+@pytest_asyncio.fixture(scope="function", name="get_or_create_group")
 async def get_or_create_group_fixture(
     db_session_test: AsyncSession,
     get_or_create_sync: Synchronization,
@@ -225,7 +225,6 @@ async def get_or_create_group_fixture(
     group: Optional[Group] = await repo.get_by_id(db_session_test, 1)
     if not group:
         group = Group(
-            id=1,
             created_at=datetime.now(tz=timezone.utc),
             sync_id=get_or_create_sync.id,
             lks_id=uuid.uuid4(),

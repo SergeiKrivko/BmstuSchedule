@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Uuid
@@ -10,6 +10,7 @@ class Base(DeclarativeBase):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
+        default=datetime.now(tz=timezone.utc),
     )
 
 
