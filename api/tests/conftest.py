@@ -225,6 +225,7 @@ async def get_or_create_group_fixture(
     group: Optional[Group] = await repo.get_by_id(db_session_test, 1)
     if not group:
         group = Group(
+            id=1,
             created_at=datetime.now(tz=timezone.utc),
             sync_id=get_or_create_sync.id,
             lks_id=uuid.uuid4(),
