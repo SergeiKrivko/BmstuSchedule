@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, AsyncContextManager, Optional, Protocol
 
 from fastapi import Depends
 from sqlalchemy import MetaData
@@ -18,6 +18,11 @@ Base = declarative_base()
 metadata = MetaData()
 
 
+class ISessionMaker(Protocol):
+
+    def __call__(self) -> AsyncContextManager[AsyncSession]: ...
+
+
 @lru_cache(maxsize=1)
 def get_engine() -> AsyncEngine:
     settings = db_settings()
@@ -34,15 +39,17 @@ def get_engine() -> AsyncEngine:
 
 
 @lru_cache(maxsize=1)
-def get_session_maker() -> async_sessionmaker[AsyncSession]:
+def get_session_maker(
+    engine: Optional[AsyncEngine] = None,
+) -> ISessionMaker:
     return async_sessionmaker(
-        get_engine(),
+        engine or get_engine(),
         class_=AsyncSession,
         expire_on_commit=False,
     )
 
 
 SessionMakerDep = Annotated[
-    async_sessionmaker[AsyncSession],
+    ISessionMaker,
     Depends(get_session_maker),
 ]

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
 class TeacherBase(BaseModel):
@@ -52,3 +52,5 @@ class GroupBase(BaseModel):
     abbr: str = Field(description="Group abbreviation")
     course_id: int = Field(description="Course ID")
     semester_num: int = Field(description="Semester number")
+
+    model_config = ConfigDict(from_attributes=True)
