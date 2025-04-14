@@ -4,9 +4,9 @@ from typing import AsyncGenerator, Optional
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-from app.db.database import get_engine, get_session_maker
+from app.db.database import ISessionMaker, get_engine, get_session_maker
 from app.models.base import Base
 from app.models.course import Course
 from app.models.department import Department
@@ -42,13 +42,13 @@ async def db_engine_test_fixture() -> AsyncGenerator[AsyncEngine, None]:
 @pytest_asyncio.fixture(scope="function", name="db_session_maker_test")
 async def db_session_maker_test_fixture(
     db_engine_test: AsyncEngine,
-) -> async_sessionmaker[AsyncSession]:
+) -> ISessionMaker:
     return get_session_maker(db_engine_test)
 
 
 @pytest_asyncio.fixture(scope="function", name="db_session_test")
 async def db_session_test_fixture(
-    db_session_maker_test: async_sessionmaker[AsyncSession],
+    db_session_maker_test: ISessionMaker,
 ) -> AsyncGenerator[AsyncSession, None]:
     async with db_session_maker_test() as session:
         try:
@@ -60,7 +60,7 @@ async def db_session_test_fixture(
 @pytest.fixture(name="session_maker_mock")
 def session_maker_mock_fixture(
     db_engine_test: AsyncEngine,
-) -> async_sessionmaker[AsyncSession]:
+) -> ISessionMaker:
     return get_session_maker(db_engine_test)
 
 

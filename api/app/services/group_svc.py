@@ -2,9 +2,9 @@ from functools import lru_cache
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.schemas.base import GroupBase
+from app.db.database import ISessionMaker
 from app.domain.errors import NotFoundError
 from app.repos.group_repo import GroupRepo, group_repo
 
@@ -15,7 +15,7 @@ class GroupSvc:
 
     async def get_group(
         self,
-        sessionmaker: async_sessionmaker[AsyncSession],
+        sessionmaker: ISessionMaker,
         group_id: int,
     ) -> GroupBase:
         async with sessionmaker() as session:

@@ -1,9 +1,9 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.schemas.base import GroupBase
+from app.db.database import ISessionMaker
 from app.domain.errors import NotFoundError
 from app.models.group import Group
 from app.repos.group_repo import GroupRepo, group_repo
@@ -25,7 +25,7 @@ def group_svc_fixture(group_repo_mock: AsyncMock) -> GroupSvc:
 async def test_get_group_success(
     group_svc: GroupSvc,
     group_repo_mock: AsyncMock,
-    session_maker_mock: async_sessionmaker[AsyncSession],
+    session_maker_mock: ISessionMaker,
 ) -> None:
     group_id = 1
     expected_group = Group(
@@ -48,7 +48,7 @@ async def test_get_group_success(
 async def test_get_group_not_found(
     group_svc: GroupSvc,
     group_repo_mock: AsyncMock,
-    session_maker_mock: async_sessionmaker[AsyncSession],
+    session_maker_mock: ISessionMaker,
 ) -> None:
     group_id = 999
     group_repo_mock.get_by_id.return_value = None
@@ -60,7 +60,7 @@ async def test_get_group_not_found(
 
 
 async def test_get_group_integration(
-    db_session_maker_test: async_sessionmaker[AsyncSession],
+    db_session_maker_test: ISessionMaker,
     get_or_create_group: Group,
 ) -> None:
     svc = GroupSvc(group_repository=group_repo())
