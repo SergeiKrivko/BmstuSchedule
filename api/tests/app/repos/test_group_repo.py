@@ -5,8 +5,10 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.course import Course
+from app.models.department import Department
 from app.models.group import Group
 from app.models.synchronization import Synchronization
+from app.repos.course_repo import course_repo
 from app.repos.group_repo import group_repo
 
 pytestmark = pytest.mark.asyncio
@@ -117,6 +119,65 @@ async def test_get_all_with_abbr_filter(
     filtered_groups, total = await repo.get_all(
         db_session_test,
         abbr=filter_abbr,
+    )
+
+    assert total == 1
+    assert len(filtered_groups) == 1
+    assert filtered_groups[0].id == groups[0].id
+
+
+async def test_get_all_with_course_abbr_filter(
+    db_session_test: AsyncSession,
+    get_or_create_sync: Synchronization,
+    get_or_create_department: Department,
+) -> None:
+    course_repository = course_repo()
+    courses = [
+        Course(
+            abbr="АК1 (1 курс)",
+            lks_id=uuid.uuid4(),
+            sync_id=get_or_create_sync.id,
+            course_num=1,
+            department_id=get_or_create_department.id,
+        ),
+        Course(
+            abbr="АК2 (1 курс)",
+            lks_id=uuid.uuid4(),
+            sync_id=get_or_create_sync.id,
+            course_num=1,
+            department_id=get_or_create_department.id,
+        ),
+    ]
+    for course in courses:
+        await course_repository.add(db_session_test, course)
+    await db_session_test.commit()
+
+    repo = group_repo()
+    groups = [
+        Group(
+            abbr="ИУ7-64Б-unique-abbr7",
+            course_id=courses[0].id,
+            semester_num=2,
+            lks_id=uuid.uuid4(),
+            sync_id=get_or_create_sync.id,
+        ),
+        Group(
+            abbr="ИУ7-64Б-unique-abbr8",
+            course_id=courses[1].id,
+            semester_num=2,
+            lks_id=uuid.uuid4(),
+            sync_id=get_or_create_sync.id,
+        ),
+    ]
+    for group in groups:
+        await repo.add(db_session_test, group)
+    await db_session_test.commit()
+
+    filter_course_abbr = groups[0].course.abbr
+
+    filtered_groups, total = await repo.get_all(
+        db_session_test,
+        course_abbr=filter_course_abbr,
     )
 
     assert total == 1
