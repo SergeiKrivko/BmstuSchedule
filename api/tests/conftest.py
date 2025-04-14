@@ -3,10 +3,10 @@ from datetime import datetime, timezone
 from typing import AsyncGenerator, Optional
 from unittest.mock import AsyncMock
 
-import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
+import pytest
 from app.db.database import ISessionMaker, get_engine, get_session_maker
 from app.models.base import Base
 from app.models.course import Course
