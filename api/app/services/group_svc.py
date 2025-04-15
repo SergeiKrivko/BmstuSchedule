@@ -1,12 +1,18 @@
+from datetime import datetime
 from functools import lru_cache
 from typing import Annotated, Optional
 
 from fastapi import Depends
 
 from app.api.schemas.base import GroupBase
-from app.api.schemas.group import GroupList
+from app.api.schemas.group import (
+    GroupList,
+    GroupSchedule,
+    GroupScheduleItem,
+)
 from app.db.database import ISessionMaker
 from app.domain.errors import NotFoundError
+from app.domain.timeslot import TimeSlot
 from app.repos.group_repo import GroupRepo, group_repo
 
 
@@ -56,6 +62,44 @@ class GroupSvc:
                 total=total,
                 page=page,
                 size=size,
+            )
+
+    async def get_group_schedule(
+        self,
+        sessionmaker: ISessionMaker,
+        group_id: int,
+        dt_from: datetime,
+        dt_to: datetime,
+    ) -> GroupSchedule:
+        async with sessionmaker() as session:
+            schedule_result = await self.group_repo.get_schedule_by_group_id(
+                session,
+                group_id,
+                dt_from=dt_from,
+                dt_to=dt_to,
+            )
+
+            if not schedule_result:
+                msg = "Group schedule not found"
+                raise NotFoundError(msg)
+
+            # Преобразуем ConcreteSchedulePair в GroupScheduleItem
+            schedule_items = []
+            for concrete_pair in schedule_result.schedule_pairs:
+                schedule_item = GroupScheduleItem(
+                    time_slot=TimeSlot(
+                        start_time=concrete_pair.time_slot.start_time,
+                        end_time=concrete_pair.time_slot.end_time,
+                    ),
+                    teachers=concrete_pair.teachers,
+                    discipline=concrete_pair.discipline,
+                    rooms=concrete_pair.audiences,  # переименовываем audiences в rooms
+                )
+                schedule_items.append(schedule_item)
+
+            return GroupSchedule(
+                group=schedule_result.group,
+                schedule=schedule_items,  # используем преобразованные элементы
             )
 
 
