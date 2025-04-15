@@ -39,8 +39,8 @@ async def get_groups(
         Optional[str],
         Query(description="Filter groups by filial abbreviation"),
     ] = None,
-    page: int = Query(1, ge=1, description="Page number"),
-    size: int = Query(20, ge=1, le=100, description="Page size"),
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    size: Annotated[int, Query(ge=1, le=100, description="Page size")] = 20,
 ) -> GroupListResponse:
     raise NotImplementedError
 
@@ -58,14 +58,14 @@ async def get_group(
 
 
 @router.get(
-    "/{group_id}/schedule",
+    "/groups/{group_id}/schedule",
     tags=["groups"],
     summary="Get schedule for a specific group",
     response_model=GroupScheduleResponse,
 )
 async def get_group_schedule(
-    group_id: int = Path(description="ID of the group"),
-    dt_from: Annotated[Optional[datetime], Query(description="Start datetime")] = None,
-    dt_to: Annotated[Optional[datetime], Query(description="End datetime")] = None,
+    group_id: Annotated[int, Path(description="ID of the group")],
+    dt_from: Annotated[datetime, Query(description="Start datetime")],
+    dt_to: Annotated[datetime, Query(description="End datetime")],
 ) -> GroupScheduleResponse:
     raise NotImplementedError
