@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 from app.api.schemas.base import GroupBase
 from app.api.schemas.response import APIResponse
-from app.models import SchedulePair
+from app.api.schemas.schedule_pair import SchedulePair
 
 
 class GroupSchedule(BaseModel):

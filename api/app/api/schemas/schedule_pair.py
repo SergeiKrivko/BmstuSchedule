@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from app.api.schemas.base import GroupBase, DisciplineBase, RoomBase, TeacherBase
+from app.api.schemas.base import DisciplineBase, GroupBase, RoomBase, TeacherBase
 from app.domain.day_of_week import DayOfWeek
 from app.domain.timeslot import TimeSlot
 

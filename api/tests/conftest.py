@@ -58,7 +58,7 @@ async def db_session_test_fixture(
             await session.rollback()
 
 
-@pytest.fixture(name="session_maker_mock")
+@pytest.fixture(name="session_maker_mock", autouse=True)
 def session_maker_mock_fixture() -> ISessionMaker:
     return get_session_maker(AsyncMock(spec=AsyncEngine))
 
@@ -215,7 +215,7 @@ async def get_or_create_course_fixture(
     return course
 
 
-@pytest_asyncio.fixture(scope="function", name="get_or_create_group")
+@pytest_asyncio.fixture(scope="function", name="get_or_create_group", autouse=True)
 async def get_or_create_group_fixture(
     db_session_test: AsyncSession,
     get_or_create_sync: Synchronization,
