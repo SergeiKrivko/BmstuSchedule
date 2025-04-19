@@ -1,22 +1,13 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from app.api.schemas.base import DisciplineBase, GroupBase, RoomBase, TeacherBase
+from app.api.schemas.base import TeacherBase
 from app.api.schemas.response import APIResponse
-from app.domain.day_of_week import DayOfWeek
-from app.domain.timeslot import TimeSlot
-
-
-class TeacherScheduleItem(BaseModel):
-    day: DayOfWeek = Field(description="Day of week")
-    time_slot: TimeSlot = Field(description="Time slot")
-    groups: list[GroupBase] = Field(description="List of groups")
-    disciplines: list[DisciplineBase] = Field(description="List of disciplines")
-    rooms: list[RoomBase] = Field(description="List of rooms")
+from app.models import SchedulePair
 
 
 class TeacherSchedule(BaseModel):
     teacher: TeacherBase
-    schedule: list[TeacherScheduleItem]
+    schedule: list[SchedulePair]
 
 
 class TeacherList(BaseModel):
