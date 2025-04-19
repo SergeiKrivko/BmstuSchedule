@@ -18,7 +18,7 @@ from app.models.teacher import Teacher
 class SchedulePair(Base, SyncMixin):
     __tablename__ = "schedule_pairs"
 
-    day: Mapped[int] = mapped_column(Integer, nullable=False)
+    day: Mapped[str] = mapped_column(String, nullable=False)
     week: Mapped[str] = mapped_column(String, nullable=False)
     start_time: Mapped[str] = mapped_column(String, nullable=False)
     end_time: Mapped[str] = mapped_column(String, nullable=False)

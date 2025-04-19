@@ -32,13 +32,14 @@ class RoomBase(BaseModel):
 
 class DisciplineBase(BaseModel):
     id: int = Field(description="Discipline ID")
+    abbr: str = Field(description="Discipline abbreviation", examples=["ИиДУ"])
     full_name: str = Field(
         description="Discipline full name",
         examples=["Интегралы и дифференциальные уравнения"],
     )
     short_name: str = Field(
         description="Discipline short name",
-        examples=["ИиДУ"],
+        examples=["Интегр. и дифф. уравнения"],
     )
     act_type: Optional[str] = Field(
         None,
