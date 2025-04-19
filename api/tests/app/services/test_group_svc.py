@@ -1,7 +1,12 @@
-from datetime import datetime
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-lines
+# pylint: disable=too-many-statements
+import uuid
+from datetime import datetime, timezone
 from unittest.mock import ANY, AsyncMock
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.base import DisciplineBase, GroupBase, RoomBase, TeacherBase
 from app.api.schemas.group import GroupList, GroupSchedule
@@ -9,7 +14,9 @@ from app.db.database import ISessionMaker
 from app.domain.errors import NotFoundError
 from app.domain.schedule import ConcreteSchedulePair, GroupScheduleResult
 from app.domain.timeslot import TimeSlot
+from app.models.course import Course
 from app.models.group import Group
+from app.models.synchronization import Synchronization
 from app.repos.group_repo import GroupRepo, group_repo
 from app.services.group_svc import GroupSvc
 
@@ -31,18 +38,22 @@ async def test_get_group_success(
     group_repo_mock: AsyncMock,
     session_maker_mock: ISessionMaker,
 ) -> None:
-    # Arrange
     group_id = 1
-    group = Group(id=group_id, abbr="ИУ7-11", course_id=1, semester_num=2)
+    group = Group(
+        id=group_id,
+        abbr="ИУ7-11",
+        course_id=1,
+        semester_num=2,
+        lks_id=uuid.uuid4(),
+        sync_id=123,
+    )
     group_repo_mock.get_by_id.return_value = group
 
-    # Act
     result = await group_svc.get_group(
-        session_maker_mock,
-        group_id,
+        sessionmaker=session_maker_mock,
+        group_id=group_id,
     )
 
-    # Assert
     assert result.id == group_id
     assert result.abbr == group.abbr
     assert result.course_id == group.course_id
@@ -54,15 +65,13 @@ async def test_get_group_not_found(
     group_repo_mock: AsyncMock,
     session_maker_mock: ISessionMaker,
 ) -> None:
-    # Arrange
     group_id = 1
     group_repo_mock.get_by_id.return_value = None
 
-    # Act & Assert
     with pytest.raises(NotFoundError) as excinfo:
         await group_svc.get_group(
-            session_maker_mock,
-            group_id,
+            sessionmaker=session_maker_mock,
+            group_id=group_id,
         )
     assert "Group not found" in str(excinfo.value)
 
@@ -72,25 +81,43 @@ async def test_get_groups_success(
     group_repo_mock: AsyncMock,
     session_maker_mock: ISessionMaker,
 ) -> None:
-    # Arrange
     total = 3
     page = 1
     size = 10
     groups = [
-        Group(id=1, abbr="ИУ7-11", course_id=1, semester_num=2),
-        Group(id=2, abbr="ИУ7-12", course_id=1, semester_num=2),
-        Group(id=3, abbr="ИУ7-13", course_id=1, semester_num=2),
+        Group(
+            id=1,
+            abbr="ИУ7-11",
+            course_id=1,
+            semester_num=2,
+            lks_id=uuid.uuid4(),
+            sync_id=123,
+        ),
+        Group(
+            id=2,
+            abbr="ИУ7-12",
+            course_id=1,
+            semester_num=2,
+            lks_id=uuid.uuid4(),
+            sync_id=123,
+        ),
+        Group(
+            id=3,
+            abbr="ИУ7-13",
+            course_id=1,
+            semester_num=2,
+            lks_id=uuid.uuid4(),
+            sync_id=123,
+        ),
     ]
     group_repo_mock.get_all.return_value = (groups, total)
 
-    # Act
     result = await group_svc.get_groups(
         session_maker_mock,
         page=page,
         size=size,
     )
 
-    # Assert
     assert isinstance(result, GroupList)
     assert len(result.items) == total
     assert result.total == total
@@ -107,27 +134,37 @@ async def test_get_groups_with_filters(
     group_repo_mock: AsyncMock,
     session_maker_mock: ISessionMaker,
 ) -> None:
-    # Arrange
     abbr = "ИУ7"
     groups = [
-        Group(id=1, abbr="ИУ7-11", course_id=1, semester_num=2),
-        Group(id=2, abbr="ИУ7-12", course_id=1, semester_num=2),
+        Group(
+            id=1,
+            abbr="ИУ7-11",
+            course_id=1,
+            semester_num=2,
+            lks_id=uuid.uuid4(),
+            sync_id=123,
+        ),
+        Group(
+            id=2,
+            abbr="ИУ7-12",
+            course_id=1,
+            semester_num=2,
+            lks_id=uuid.uuid4(),
+            sync_id=123,
+        ),
     ]
     total = len(groups)
     group_repo_mock.get_all.return_value = (groups, total)
 
-    # Act
     result = await group_svc.get_groups(
         session_maker_mock,
         abbr=abbr,
     )
 
-    # Assert
     assert isinstance(result, GroupList)
     assert len(result.items) == total
     assert all(group.abbr.startswith(abbr) for group in result.items)
 
-    # Проверяем, что фильтры правильно переданы в репозиторий
     group_repo_mock.get_all.assert_called_once_with(
         ANY,
         abbr=abbr,
@@ -145,91 +182,83 @@ async def test_get_groups_empty_result(
     group_repo_mock: AsyncMock,
     session_maker_mock: ISessionMaker,
 ) -> None:
-    # Arrange
     group_repo_mock.get_all.return_value = ([], 0)
 
-    # Act
     result = await group_svc.get_groups(
         session_maker_mock,
     )
 
-    # Assert
     assert isinstance(result, GroupList)
     assert len(result.items) == 0
     assert result.total == 0
 
 
 async def test_get_group_integration(
-    group_svc: GroupSvc,
-    session_maker_mock: ISessionMaker,
+    db_session_test: AsyncSession,
+    db_session_maker_test: ISessionMaker,
+    get_or_create_course: Course,
+    get_or_create_sync: Synchronization,
 ) -> None:
-    # Arrange - use the real repo
     real_repo = group_repo()
     group_service = GroupSvc(group_repository=real_repo)
 
-    # Create a real async session context manager
-    async def mock_session():
-        session = AsyncMock()
-        # Setup mock to return a group when get() is called
-        group = Group(id=1, abbr="ИУ7-11", course_id=1, semester_num=2)
-        session.get.return_value = group
-        return session
+    group = Group(
+        id=11,
+        abbr="ИУ7-11",
+        course_id=get_or_create_course.id,
+        semester_num=2,
+        lks_id=uuid.uuid4(),
+        sync_id=get_or_create_sync.id,
+    )
+    await real_repo.add(db_session_test, group)
+    await db_session_test.commit()
 
-    # Replace the __call__ of session_maker_mock to return our mock_session
-    session_maker_mock.__call__ = mock_session
+    result = await group_service.get_group(
+        sessionmaker=db_session_maker_test,
+        group_id=group.id,
+    )
 
-    # Act
-    try:
-        result = await group_service.get_group(
-            session_maker_mock,
-            1,
-        )
-        # Assert - If no exception, the result should match our group
-        assert result.id == 1
-        assert result.abbr == "ИУ7-11"
-    except Exception:
-        # Skip assertions if there's an error (expected in some environments)
-        pass
+    assert result.id == group.id
+    assert result.abbr == group.abbr
 
 
 async def test_get_groups_integration(
-    group_svc: GroupSvc,
-    session_maker_mock: ISessionMaker,
+    db_session_test: AsyncSession,
+    db_session_maker_test: ISessionMaker,
+    get_or_create_sync: Synchronization,
+    get_or_create_course: Course,
 ) -> None:
-    # Arrange - use the real repo
     real_repo = group_repo()
     group_service = GroupSvc(group_repository=real_repo)
 
-    # Create a real async session context manager
-    async def mock_session():
-        session = AsyncMock()
-        # Setup mock to return groups when execute is called
-        groups = [
-            Group(id=1, abbr="ИУ7-11", course_id=1, semester_num=2),
-            Group(id=2, abbr="ИУ7-12", course_id=1, semester_num=2),
-        ]
+    groups = [
+        Group(
+            id=11,
+            abbr="ИУ7-11",
+            course_id=get_or_create_course.id,
+            semester_num=2,
+            lks_id=uuid.uuid4(),
+            sync_id=get_or_create_sync.id,
+        ),
+        Group(
+            id=12,
+            abbr="ИУ7-12",
+            course_id=get_or_create_course.id,
+            semester_num=2,
+            lks_id=uuid.uuid4(),
+            sync_id=get_or_create_sync.id,
+        ),
+    ]
+    for group in groups:
+        await real_repo.add(db_session_test, group)
+    await db_session_test.commit()
 
-        # Mock the execute method for the count query first, then groups query
-        session.execute.side_effect = [
-            AsyncMock(scalar=AsyncMock(return_value=len(groups))),
-            AsyncMock(scalars=AsyncMock(return_value=AsyncMock(all=AsyncMock(return_value=groups)))),
-        ]
-        return session
+    result = await group_service.get_groups(
+        sessionmaker=db_session_maker_test,
+    )
 
-    # Replace the __call__ of session_maker_mock to return our mock_session
-    session_maker_mock.__call__ = mock_session
-
-    # Act
-    try:
-        result = await group_service.get_groups(
-            session_maker_mock,
-        )
-        # Assert - If no exception, the result should match our groups
-        assert len(result.items) == 2
-        assert result.total == 2
-    except Exception:
-        # Skip assertions if there's an error (expected in some environments)
-        pass
+    assert len(result.items) == len(groups)
+    assert result.total == len(groups)
 
 
 async def test_get_group_schedule_success(
@@ -237,10 +266,8 @@ async def test_get_group_schedule_success(
     group_repo_mock: AsyncMock,
     session_maker_mock: ISessionMaker,
 ) -> None:
-    # Arrange
     group_id = 1
 
-    # Create mock objects for testing with proper schemas
     discipline_base = DisciplineBase(
         id=1,
         full_name="Test Discipline",
@@ -263,26 +290,14 @@ async def test_get_group_schedule_success(
         map_url=None,
     )
 
-    # Создаем конкретную дату для тестирования
-    concrete_start = datetime(2023, 9, 18, 9, 0)  # Monday, 9:00 AM
-    concrete_end = datetime(2023, 9, 18, 10, 30)  # Monday, 10:30 AM
+    concrete_start = datetime(2023, 9, 18, 9, 0, tzinfo=timezone.utc)
+    concrete_end = datetime(2023, 9, 18, 10, 30, tzinfo=timezone.utc)
 
-    # Создаем TimeSlot
     time_slot = TimeSlot(
         start_time=concrete_start,
         end_time=concrete_end,
     )
 
-    # Создаем экземпляр доменной модели с правильной структурой
-    concrete_pair = ConcreteSchedulePair(
-        id=1,
-        time_slot=time_slot,
-        discipline=discipline_base,
-        teachers=[teacher_base],
-        audiences=[room_base],
-    )
-
-    # Создаем GroupBase для результата
     group_base = GroupBase(
         id=group_id,
         abbr="ИУ7-11",
@@ -290,20 +305,25 @@ async def test_get_group_schedule_success(
         semester_num=2,
     )
 
-    # Создаем результат из репозитория
+    concrete_pair = ConcreteSchedulePair(
+        id=1,
+        time_slot=time_slot,
+        disciplines=[discipline_base],
+        groups=[group_base],
+        teachers=[teacher_base],
+        audiences=[room_base],
+    )
+
     schedule_result = GroupScheduleResult(
         group=group_base,
         schedule_pairs=[concrete_pair],
     )
 
-    # Setup mock return values
     group_repo_mock.get_schedule_by_group_id.return_value = schedule_result
 
-    # Даты для запроса
-    dt_from = datetime(2023, 9, 18, 0, 0)
-    dt_to = datetime(2023, 9, 18, 23, 59)
+    dt_from = datetime(2023, 9, 18, 0, 0, tzinfo=timezone.utc)
+    dt_to = datetime(2023, 9, 18, 23, 59, tzinfo=timezone.utc)
 
-    # Act
     result = await group_svc.get_group_schedule(
         session_maker_mock,
         group_id,
@@ -311,7 +331,6 @@ async def test_get_group_schedule_success(
         dt_to=dt_to,
     )
 
-    # Assert
     assert isinstance(result, GroupSchedule)
     assert result.group.id == group_id
     assert result.group.abbr == "ИУ7-11"
@@ -319,14 +338,12 @@ async def test_get_group_schedule_success(
     assert len(result.schedule) == 1
     schedule_item = result.schedule[0]
 
-    # Проверяем время
     assert schedule_item.time_slot.start_time == concrete_start
     assert schedule_item.time_slot.end_time == concrete_end
 
-    # Проверяем отношения
-    assert schedule_item.discipline.id == discipline_base.id
-    assert schedule_item.discipline.full_name == discipline_base.full_name
-    assert schedule_item.discipline.short_name == discipline_base.short_name
+    assert schedule_item.disciplines[0].id == discipline_base.id
+    assert schedule_item.disciplines[0].full_name == discipline_base.full_name
+    assert schedule_item.disciplines[0].short_name == discipline_base.short_name
 
     assert len(schedule_item.teachers) == 1
     assert schedule_item.teachers[0].id == teacher_base.id
@@ -344,15 +361,12 @@ async def test_get_group_schedule_not_found(
     group_repo_mock: AsyncMock,
     session_maker_mock: ISessionMaker,
 ) -> None:
-    # Arrange
     group_id = 999
     group_repo_mock.get_schedule_by_group_id.return_value = None
 
-    # Даты для запроса
-    dt_from = datetime(2023, 9, 18, 0, 0)
-    dt_to = datetime(2023, 9, 18, 23, 59)
+    dt_from = datetime(2023, 9, 18, 0, 0, tzinfo=timezone.utc)
+    dt_to = datetime(2023, 9, 18, 23, 59, tzinfo=timezone.utc)
 
-    # Act & Assert
     with pytest.raises(NotFoundError) as excinfo:
         await group_svc.get_group_schedule(
             session_maker_mock,
@@ -368,10 +382,8 @@ async def test_get_group_schedule_empty(
     group_repo_mock: AsyncMock,
     session_maker_mock: ISessionMaker,
 ) -> None:
-    # Arrange
     group_id = 1
 
-    # Создаем GroupBase для результата
     group_base = GroupBase(
         id=group_id,
         abbr="ИУ7-11",
@@ -379,20 +391,16 @@ async def test_get_group_schedule_empty(
         semester_num=2,
     )
 
-    # Создаем результат с пустым расписанием
     schedule_result = GroupScheduleResult(
         group=group_base,
         schedule_pairs=[],
     )
 
-    # Setup mock to return group but empty schedule
     group_repo_mock.get_schedule_by_group_id.return_value = schedule_result
 
-    # Даты для запроса
-    dt_from = datetime(2023, 9, 18, 0, 0)
-    dt_to = datetime(2023, 9, 18, 23, 59)
+    dt_from = datetime(2023, 9, 18, 0, 0, tzinfo=timezone.utc)
+    dt_to = datetime(2023, 9, 18, 23, 59, tzinfo=timezone.utc)
 
-    # Act
     result = await group_svc.get_group_schedule(
         session_maker_mock,
         group_id,
@@ -400,7 +408,6 @@ async def test_get_group_schedule_empty(
         dt_to=dt_to,
     )
 
-    # Assert
     assert isinstance(result, GroupSchedule)
     assert result.group.id == group_id
     assert result.group.abbr == "ИУ7-11"
@@ -412,10 +419,8 @@ async def test_get_group_schedule_with_date_filters(
     group_repo_mock: AsyncMock,
     session_maker_mock: ISessionMaker,
 ) -> None:
-    # Arrange
     group_id = 1
 
-    # Create mock objects for testing with proper schemas
     discipline_base = DisciplineBase(
         id=1,
         full_name="Test Discipline",
@@ -423,11 +428,9 @@ async def test_get_group_schedule_with_date_filters(
         abbr="TD",
     )
 
-    # Create some test date filters
-    dt_from = datetime(2023, 9, 18, 9, 0)  # Monday, 9:00 AM
-    dt_to = datetime(2023, 9, 18, 17, 0)   # Monday, 5:00 PM
+    dt_from = datetime(2023, 9, 18, 9, 0, tzinfo=timezone.utc)
+    dt_to = datetime(2023, 9, 18, 17, 0, tzinfo=timezone.utc)
 
-    # Create a RoomBase for the test
     room_base = RoomBase(
         id=1,
         name="101",
@@ -435,17 +438,14 @@ async def test_get_group_schedule_with_date_filters(
         map_url=None,
     )
 
-    # Создаем конкретную дату для тестирования
-    concrete_start = datetime(2023, 9, 18, 9, 0)  # Monday, 9:00 AM
-    concrete_end = datetime(2023, 9, 18, 10, 30)  # Monday, 10:30 AM
+    concrete_start = datetime(2023, 9, 18, 9, 0, tzinfo=timezone.utc)
+    concrete_end = datetime(2023, 9, 18, 10, 30, tzinfo=timezone.utc)
 
-    # Создаем TimeSlot
     time_slot = TimeSlot(
         start_time=concrete_start,
         end_time=concrete_end,
     )
 
-    # Создаем GroupBase для результата
     group_base = GroupBase(
         id=group_id,
         abbr="ИУ7-11",
@@ -453,33 +453,29 @@ async def test_get_group_schedule_with_date_filters(
         semester_num=2,
     )
 
-    # Создаем экземпляр доменной модели с правильной структурой
     concrete_pair = ConcreteSchedulePair(
         id=1,
         time_slot=time_slot,
-        discipline=discipline_base,
+        disciplines=[discipline_base],
+        groups=[group_base],
         teachers=[],
         audiences=[room_base],
     )
 
-    # Создаем результат из репозитория
     schedule_result = GroupScheduleResult(
         group=group_base,
         schedule_pairs=[concrete_pair],
     )
 
-    # Setup mock return values with date filters
     group_repo_mock.get_schedule_by_group_id.return_value = schedule_result
 
-    # Act
     result = await group_svc.get_group_schedule(
-        session_maker_mock,
-        group_id,
+        sessionmaker=session_maker_mock,
+        group_id=group_id,
         dt_from=dt_from,
         dt_to=dt_to,
     )
 
-    # Assert
     assert isinstance(result, GroupSchedule)
     assert result.group.id == group_id
     assert len(result.schedule) == 1
@@ -488,7 +484,6 @@ async def test_get_group_schedule_with_date_filters(
     assert schedule_item.time_slot.start_time == concrete_start
     assert schedule_item.time_slot.end_time == concrete_end
 
-    # Проверяем, что запрос в репозиторий был вызван с правильными параметрами
     assert group_repo_mock.get_schedule_by_group_id.call_args[0][1] == group_id
     assert group_repo_mock.get_schedule_by_group_id.call_args[1]["dt_from"] == dt_from
     assert group_repo_mock.get_schedule_by_group_id.call_args[1]["dt_to"] == dt_to

@@ -8,8 +8,8 @@ from app.api.schemas.base import GroupBase
 from app.api.schemas.group import (
     GroupList,
     GroupSchedule,
-    GroupScheduleItem,
 )
+from app.api.schemas.schedule_pair import SchedulePairRead
 from app.db.database import ISessionMaker
 from app.domain.errors import NotFoundError
 from app.domain.timeslot import TimeSlot
@@ -83,23 +83,23 @@ class GroupSvc:
                 msg = "Group schedule not found"
                 raise NotFoundError(msg)
 
-            # Преобразуем ConcreteSchedulePair в GroupScheduleItem
             schedule_items = []
             for concrete_pair in schedule_result.schedule_pairs:
-                schedule_item = GroupScheduleItem(
+                schedule_item = SchedulePairRead(
                     time_slot=TimeSlot(
                         start_time=concrete_pair.time_slot.start_time,
                         end_time=concrete_pair.time_slot.end_time,
                     ),
                     teachers=concrete_pair.teachers,
-                    discipline=concrete_pair.discipline,
+                    disciplines=concrete_pair.disciplines,
                     rooms=concrete_pair.audiences,  # переименовываем audiences в rooms
+                    groups=concrete_pair.groups,
                 )
                 schedule_items.append(schedule_item)
 
             return GroupSchedule(
                 group=schedule_result.group,
-                schedule=schedule_items,  # используем преобразованные элементы
+                schedule=schedule_items,
             )
 
 
