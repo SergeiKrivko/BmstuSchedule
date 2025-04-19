@@ -12,7 +12,7 @@ class Synchronization(Base):
 
     comment: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, nullable=False)
-    finished_at: Mapped[datetime] = mapped_column(
+    finished_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
+        nullable=True,
     )
