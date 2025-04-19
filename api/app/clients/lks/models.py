@@ -5,12 +5,21 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+class StructureNodeType(StrEnum):
+    DEPARTMENT = "department"
+    GROUP = "group"
+    FACULTY = "faculty"
+    FILIAL = "filial"
+    COURSE = "course"
+    UNIVERSITY = "university"
+
+
 class StructureNode(BaseModel):
     abbr: str
-    name: str
+    name: Optional[str] = None
     id: UUID = Field(alias="uuid")
     children: list["StructureNode"]
-    type: Optional[str] = Field(None, alias="nodeType")
+    type: Optional[StructureNodeType] = Field(None, alias="nodeType")
 
 
 class Group(BaseModel):
