@@ -58,7 +58,7 @@ async def db_session_test_fixture(
             await session.rollback()
 
 
-@pytest.fixture(name="session_maker_mock")
+@pytest.fixture(name="session_maker_mock", autouse=True)
 def session_maker_mock_fixture() -> ISessionMaker:
     return get_session_maker(AsyncMock(spec=AsyncEngine))
 
