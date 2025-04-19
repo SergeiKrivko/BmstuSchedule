@@ -2,12 +2,12 @@ from pydantic import BaseModel
 
 from app.api.schemas.base import GroupBase
 from app.api.schemas.response import APIResponse
-from app.api.schemas.schedule_pair import SchedulePair
+from app.api.schemas.schedule_pair import SchedulePairRead
 
 
 class GroupSchedule(BaseModel):
     group: GroupBase
-    schedule: list[SchedulePair]
+    schedule: list[SchedulePairRead]
 
 
 class GroupList(BaseModel):

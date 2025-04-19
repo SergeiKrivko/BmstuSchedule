@@ -2,12 +2,12 @@ from pydantic import BaseModel
 
 from app.api.schemas.base import RoomBase
 from app.api.schemas.response import APIResponse
-from app.api.schemas.schedule_pair import SchedulePair
+from app.api.schemas.schedule_pair import SchedulePairRead
 
 
 class RoomSchedule(BaseModel):
     room: RoomBase
-    schedule: list[SchedulePair]
+    schedule: list[SchedulePairRead]
 
 
 class RoomList(BaseModel):

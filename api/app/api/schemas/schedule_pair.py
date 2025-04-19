@@ -5,7 +5,7 @@ from app.domain.day_of_week import DayOfWeek
 from app.domain.timeslot import TimeSlot
 
 
-class SchedulePair(BaseModel):
+class SchedulePairRead(BaseModel):
     day: DayOfWeek = Field(description="Day of week")
     time_slot: TimeSlot = Field(description="Time slot")
     groups: list[GroupBase] = Field(description="List of groups")
