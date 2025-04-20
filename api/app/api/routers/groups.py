@@ -66,9 +66,12 @@ async def get_groups(
     response_model=GroupResponse,
 )
 async def get_group(
+    sessionmaker: SessionMakerDep,
+    group_svc: GroupSvcDep,
     group_id: Annotated[int, Path(description="ID of the group")],
 ) -> GroupResponse:
-    raise NotImplementedError
+    group = await group_svc.get_group(sessionmaker, group_id)
+    return GroupResponse(data=group)
 
 
 @router.get(
