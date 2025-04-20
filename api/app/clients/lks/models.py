@@ -1,16 +1,27 @@
 from enum import IntEnum, StrEnum
-from typing import Optional
+from typing import Annotated, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 
+class StructureNodeType(StrEnum):
+    DEPARTMENT = "department"
+    GROUP = "group"
+    FACULTY = "faculty"
+    FILIAL = "filial"
+    COURSE = "course"
+    UNIVERSITY = "university"
+
+
 class StructureNode(BaseModel):
-    abbr: str
-    name: str
-    id: UUID = Field(alias="uuid")
-    children: list["StructureNode"]
-    type: Optional[str] = Field(None, alias="nodeType")
+    abbr: Optional[str] = None
+    name: Optional[str] = None
+    id: Annotated[Optional[UUID], Field(alias="uuid")] = None
+    children: Annotated[list["StructureNode"], Field(default_factory=list)] = Field(default_factory=list)
+    type: Optional[StructureNodeType] = Field(None, alias="nodeType")
+    department_id: Annotated[Optional[UUID], Field(alias="parentUuid")] = None
+    semester_num: Annotated[Optional[int], Field(alias="semester")] = None
 
 
 class Group(BaseModel):
@@ -22,7 +33,7 @@ class Audience(BaseModel):
     id: Optional[UUID] = Field(None, alias="uuid")
     name: str
     building: Optional[str] = None
-    structure_node_id: Optional[str] = Field(None, alias="department_uid")
+    department_id: Optional[UUID] = Field(None, alias="department_uid")
 
 
 class Teacher(BaseModel):

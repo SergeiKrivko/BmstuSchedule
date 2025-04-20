@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.api.routers import groups, rooms, teachers
+from app.api.routers import admin, groups, rooms, teachers
 
 
 def create_app() -> FastAPI:
@@ -18,5 +18,6 @@ def create_app() -> FastAPI:
     app.include_router(teachers.router)
     app.include_router(groups.router)
     app.include_router(rooms.router)
+    app.include_router(admin.router)
 
     return app

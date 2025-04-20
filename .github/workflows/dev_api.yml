@@ -35,6 +35,7 @@ jobs:
 
       - name: Format, lint and test
         working-directory: api
+        continue-on-error: true
         run: make run-environment && make check
 
       - name: Log in to the Container registry

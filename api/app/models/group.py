@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -14,14 +14,14 @@ if TYPE_CHECKING:
 class Group(Base, LksMixin, AbbrMixin, SyncMixin):
     __tablename__ = "groups"
 
-    course_id: Mapped[int] = mapped_column(
+    course_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         ForeignKey("courses.id"),
-        nullable=False,
+        nullable=True,
     )
     semester_num: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    course: Mapped["Course"] = relationship("Course", back_populates="groups")
+    course: Mapped[Optional["Course"]] = relationship("Course", back_populates="groups")
 
     schedule_pairs: Mapped[list["SchedulePair"]] = relationship(
         "SchedulePair",
