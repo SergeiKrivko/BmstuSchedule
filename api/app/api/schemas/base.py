@@ -51,7 +51,7 @@ class DisciplineBase(BaseModel):
 class GroupBase(BaseModel):
     id: int = Field(description="Group ID")
     abbr: str = Field(description="Group abbreviation")
-    course_id: int = Field(description="Course ID")
+    course_id: Optional[int] = Field(description="Course ID")
     semester_num: int = Field(description="Semester number")
 
     model_config = ConfigDict(from_attributes=True)

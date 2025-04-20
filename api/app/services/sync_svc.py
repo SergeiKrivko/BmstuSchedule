@@ -1,12 +1,13 @@
-from enum import StrEnum
 from functools import lru_cache
+from typing import Annotated
 
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.clients.lks.client import LksClient, lks_client
-from app.clients.lks.models import StructureNode, StructureNodeType
+from app.clients.lks.client import LksClient, get_lks_client
+from app.clients.lks.models import StructureNode
 from app.db.database import ISessionMaker
+from app.domain.sync_status import SyncStatus
 from app.models.course import Course
 from app.models.department import Department
 from app.models.faculty import Faculty
@@ -21,12 +22,6 @@ from app.repos.filial_repo import FilialRepo, filial_repo
 from app.repos.group_repo import GroupRepo, group_repo
 from app.repos.sync_repo import SyncRepo, sync_repo
 from app.repos.university_repo import UniversityRepo, university_repo
-
-
-class SyncStatus(StrEnum):
-    IN_PROGRESS = "in_progress"
-    SUCCESS = "success"
-    FAILED = "failed"
 
 
 class LksSynchronizer:
@@ -51,7 +46,24 @@ class LksSynchronizer:
         self.university_repository = university_repository
 
     async def sync_structure(self, sessionmaker: ISessionMaker, sync_id: int) -> None:
-        pass
+        print("Idem na back", sync_id, flush=True)
+        structure = await self.lks_client.get_structure()
+        print("Structure received", sync_id, flush=True)
+        async with sessionmaker() as session:
+            print("University", structure.name, flush=True)
+            for filial in structure.children:
+                print("Filial", filial.name, flush=True)
+                for faculty in filial.children:
+                    print("Faculty", faculty.name, flush=True)
+                    for department in faculty.children:
+                        print("Department", department.name, flush=True)
+                        for course in department.children:
+                            print("Course", course.name, flush=True)
+                            for group in course.children:
+                                print("Group", group.abbr, flush=True)
+                                await self.sync_group(session, group, sync_id)
+            print("Synchronization finished", sync_id, flush=True)
+            await session.commit()
 
     async def sync_group(
         self,
@@ -59,19 +71,17 @@ class LksSynchronizer:
         structure: StructureNode,
         sync_id: int,
     ) -> Group:
-        course_lks_id = structure.course_id  # parentUuid в lks есть для групп
-        course = await self.course_repository.get_by_lks_id(session, course_lks_id)
-        if not course:
-            raise ValueError(f"Course with lks_id {course_lks_id} not found")
-
-        group = Group(
-            sync_id=sync_id,
-            lks_id=structure.id,
-            abbr=structure.abbr,
-            course_id=course.id,
-        )
-        await self.group_repository.add(session, group)
-        return group
+        g = await self.group_repository.get_by_lks_id(session, structure.id)
+        print("Group", g, flush=True)
+        if not g:
+            g = Group(
+                lks_id=structure.id,
+                abbr=structure.abbr,
+                semester_num=structure.semester_num or 1,
+            )
+        g.sync_id = sync_id
+        await self.group_repository.add(session, g)
+        return g
 
     async def sync_department(
         self,
@@ -127,7 +137,7 @@ class LksSynchronizer:
 @lru_cache(maxsize=1)
 def lks_synchronizer() -> LksSynchronizer:
     return LksSynchronizer(
-        lks_client=lks_client(),
+        lks_api_client=get_lks_client(),
         sync_repository=sync_repo(),
         group_repository=group_repo(),
         course_repository=course_repo(),
@@ -154,14 +164,17 @@ class SyncSvc:
             )
             await self.sync_repo.add(session, sync_model)
             await session.commit()
+            print("Synchronization started", sync_model.id)
 
         bt.add_task(self._sync_with_lks, sessionmaker, sync_model.id)
 
     async def _sync_with_lks(self, sessionmaker: ISessionMaker, sync_id: int) -> None:
         try:
+            print("Synchronizing with LKS", sync_id)
             await self.lks_synchronizer.sync_structure(sessionmaker, sync_id)
             status = SyncStatus.SUCCESS
-        except Exception:  # noqa: BLE001
+        except Exception as e:  # noqa: BLE001
+            print("Error", e, flush=True)
             status = SyncStatus.FAILED
 
         async with sessionmaker() as session:
@@ -173,5 +186,8 @@ class SyncSvc:
 def sync_svc() -> SyncSvc:
     return SyncSvc(
         sync_repo=sync_repo(),
-        lks_api_client=lks_client(),
+        lks_syncer=lks_synchronizer(),
     )
+
+
+SyncSvcDep = Annotated[SyncSvc, Depends(sync_svc)]

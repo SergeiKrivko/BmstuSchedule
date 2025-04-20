@@ -60,3 +60,12 @@ run-environment: ## Run environment
 
 stop-environment: ## Stop environment
 	@export $$(cat envs/common.env | xargs); export $$(cat envs/local.env | xargs); docker compose down
+
+grev:
+	poetry run alembic revision --autogenerate -m "$(message)"
+
+urev:
+	poetry run alembic upgrade head
+
+drev:
+	poetry run alembic downgrade -1

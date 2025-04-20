@@ -8,6 +8,8 @@ from app.api.schemas.group import (
     GroupResponse,
     GroupScheduleResponse,
 )
+from app.db.database import SessionMakerDep
+from app.services.group_svc import GroupSvcDep
 
 router = APIRouter()
 
@@ -19,6 +21,8 @@ router = APIRouter()
     response_model=GroupListResponse,
 )
 async def get_groups(
+    sessionmaker: SessionMakerDep,
+    group_svc: GroupSvcDep,
     abbr: Annotated[
         Optional[str],
         Query(description="Filter groups by abbreviation"),
@@ -42,7 +46,17 @@ async def get_groups(
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     size: Annotated[int, Query(ge=1, le=100, description="Page size")] = 20,
 ) -> GroupListResponse:
-    raise NotImplementedError
+    groups = await group_svc.get_groups(
+        sessionmaker,
+        abbr=abbr,
+        course=course,
+        department=department,
+        faculty=faculty,
+        filial=filial,
+        page=page,
+        size=5000,
+    )
+    return GroupListResponse(data=groups)
 
 
 @router.get(

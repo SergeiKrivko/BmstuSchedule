@@ -1,5 +1,5 @@
 from enum import IntEnum, StrEnum
-from typing import Optional
+from typing import Annotated, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -15,11 +15,13 @@ class StructureNodeType(StrEnum):
 
 
 class StructureNode(BaseModel):
-    abbr: str
+    abbr: Optional[str] = None
     name: Optional[str] = None
-    id: UUID = Field(alias="uuid")
-    children: list["StructureNode"]
+    id: Annotated[Optional[UUID], Field(alias="uuid")] = None
+    children: Annotated[list["StructureNode"], Field(default_factory=list)] = Field(default_factory=list)
     type: Optional[StructureNodeType] = Field(None, alias="nodeType")
+    department_id: Annotated[Optional[UUID], Field(alias="parentUuid")] = None
+    semester_num: Annotated[Optional[int], Field(alias="semester")] = None
 
 
 class Group(BaseModel):
@@ -31,7 +33,7 @@ class Audience(BaseModel):
     id: Optional[UUID] = Field(None, alias="uuid")
     name: str
     building: Optional[str] = None
-    structure_node_id: Optional[str] = Field(None, alias="department_uid")
+    department_id: Optional[UUID] = Field(None, alias="department_uid")
 
 
 class Teacher(BaseModel):

@@ -31,13 +31,15 @@ class LksClient:
         async with self.__get_session() as session, session.get(url) as response:
             return await response.json()
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-    )
+    # @retry(
+    #     stop=stop_after_attempt(3),
+    #     wait=wait_exponential(multiplier=1, min=4, max=10),
+    # )
     async def get_structure(self) -> StructureNode:
         data = await self._get("structure")
+        print("Data", data, flush=True)
         response = StructureResponseBody.model_validate(data)
+        print("Response", response, flush=True)
         return response.data
 
     @retry(

@@ -1,5 +1,10 @@
-from pydantic import BaseModel
+from app.api.schemas.response import APIResponse
 
 
-class SyncAPIResponse(BaseModel):
+class SyncAPIResponse(APIResponse):
     data: None = None
+
+
+class PostMigrationsUpgradeAPIResponse(APIResponse):
+    data: str
+    detail: str = "Migration upgrade successful."
