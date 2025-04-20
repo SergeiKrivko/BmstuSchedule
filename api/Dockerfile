@@ -3,6 +3,7 @@ FROM sunpeek/poetry:py3.12-slim
 ARG ENVIRONMENT=production
 ENV ENVIRONMENT=${ENVIRONMENT}
 
+COPY alembic.ini .
 COPY pyproject.toml .
 COPY poetry.lock .
 COPY ./app ./app
