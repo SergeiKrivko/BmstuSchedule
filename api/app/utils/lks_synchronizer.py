@@ -187,7 +187,7 @@ class LksSynchronizer:
         sync_id: int,
         discipline,
     ) -> Discipline:
-        logger.info(f"Starting syncing discipline {discipline.abbr}")
+        logger.info(f"Syncing discipline {discipline.abbr}")
         d = await self.discipline_repository.get_by_abbr(session, discipline.abbr)
         if not d:
             d = Discipline(
@@ -198,7 +198,6 @@ class LksSynchronizer:
             )
         d.sync_id = sync_id
         await self.discipline_repository.add(session, d)
-        logger.info(f"Finished syncing discipline {discipline.abbr}")
         return d
 
     async def _sync_schedule_pair(
