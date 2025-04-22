@@ -12,7 +12,10 @@ class SyncRepo(BaseRepo[Synchronization]):
     model = Synchronization
 
     async def update_status(
-        self, session: AsyncSession, sync_id: int, status: SyncStatus,
+        self,
+        session: AsyncSession,
+        sync_id: int,
+        status: SyncStatus,
     ) -> None:
         await session.execute(
             update(self.model).where(self.model.id == sync_id).values(status=status),

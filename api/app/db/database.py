@@ -39,16 +39,18 @@ def get_engine() -> AsyncEngine:
 
 
 @lru_cache(maxsize=1)
-def get_session_maker() -> ISessionMaker:
-    engine = get_engine()
+def get_session_maker(engine: AsyncEngine) -> ISessionMaker:
     return async_sessionmaker(
         engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
 
+def get_default_session_maker() -> ISessionMaker:
+    return get_session_maker(get_engine())
+
 
 SessionMakerDep = Annotated[
     ISessionMaker,
-    Depends(get_session_maker),
+    Depends(get_default_session_maker),
 ]

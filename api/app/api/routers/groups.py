@@ -54,7 +54,7 @@ async def get_groups(
         faculty=faculty,
         filial=filial,
         page=page,
-        size=5000,
+        size=size,
     )
     return GroupListResponse(data=groups)
 

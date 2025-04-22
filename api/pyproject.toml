@@ -22,6 +22,7 @@ tenacity = "^9.1.2"
 async-lru = "^2.0.5"
 asyncpg = "^0.29.0"
 alembic = "^1.15.2"
+loguru = "^0.7.3"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=25.1.0"
@@ -141,7 +142,9 @@ lint.ignore = [
     "RUF001",
     "RUF003",
 ]
-exclude = []
+lint.exclude = [
+    "app/db/migrations/*",
+]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
@@ -168,5 +171,8 @@ disable = [
     "R0801", # Duplicate code
     "W0511", # TODOfixme
     "R0917", # Too many positional arguments (7/5) (too-many-positional-arguments)
+]
+ignore = [
+    "app/db/migrations",
 ]
 extension-pkg-allow-list = ["pydantic"]

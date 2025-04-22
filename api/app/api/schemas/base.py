@@ -31,7 +31,7 @@ class RoomBase(BaseModel):
 
 
 class DisciplineBase(BaseModel):
-    id: int = Field(description="Discipline ID")
+    id: Optional[int] = Field(None, description="Discipline ID")
     abbr: str = Field(description="Discipline abbreviation", examples=["ИиДУ"])
     full_name: str = Field(
         description="Discipline full name",

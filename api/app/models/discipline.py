@@ -3,13 +3,13 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import AbbrMixin, Base, LksMixin, SyncMixin
+from app.models.base import AbbrMixin, Base, SyncMixin
 
 if TYPE_CHECKING:
     from app.models.schedule_pair import SchedulePair
 
 
-class Discipline(Base, LksMixin, AbbrMixin, SyncMixin):
+class Discipline(Base, AbbrMixin, SyncMixin):
     __tablename__ = "disciplines"
 
     full_name: Mapped[str] = mapped_column(String, nullable=False)
