@@ -1,10 +1,10 @@
 from functools import lru_cache
 
 from app.models.course import Course
-from app.repos.base_repo import BaseRepo
+from app.repos.base_repo import UniqueFieldRepo
 
 
-class CourseRepo(BaseRepo[Course]):
+class CourseRepo(UniqueFieldRepo[Course]):
     model = Course
 
 

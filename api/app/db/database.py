@@ -46,6 +46,7 @@ def get_session_maker(engine: AsyncEngine) -> ISessionMaker:
         expire_on_commit=False,
     )
 
+
 def get_default_session_maker() -> ISessionMaker:
     return get_session_maker(get_engine())
 

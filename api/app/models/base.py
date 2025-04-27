@@ -23,7 +23,12 @@ class SyncMixin:
 
 
 class LksMixin:
-    lks_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
+    lks_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        nullable=False,
+        unique=True,
+        index=True,
+    )
 
 
 class AbbrMixin:

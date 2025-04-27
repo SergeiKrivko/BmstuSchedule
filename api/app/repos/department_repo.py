@@ -1,10 +1,10 @@
 from functools import lru_cache
 
 from app.models.department import Department
-from app.repos.base_repo import BaseRepo
+from app.repos.base_repo import LksIdRepo
 
 
-class DepartmentRepo(BaseRepo[Department]):
+class DepartmentRepo(LksIdRepo[Department]):
     model = Department
 
 

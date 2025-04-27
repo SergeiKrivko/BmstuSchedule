@@ -14,10 +14,10 @@ from app.models.course import Course
 from app.models.group import Group
 from app.models.many_to_many import schedule_pair_group
 from app.models.schedule_pair import SchedulePair
-from app.repos.base_repo import BaseRepo
+from app.repos.base_repo import LksIdRepo
 
 
-class GroupRepo(BaseRepo[Group]):
+class GroupRepo(LksIdRepo[Group]):
     model = Group
 
     async def get_all(

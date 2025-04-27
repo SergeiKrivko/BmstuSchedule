@@ -46,6 +46,8 @@ class SyncSvc:
             await self.sync_repo.update_status(session, sync_id, status)
             await session.commit()
 
+        logger.success(f"Syncing with LKS (sync_id: {sync_id}) completed")
+
 
 @lru_cache(maxsize=1)
 def sync_svc() -> SyncSvc:

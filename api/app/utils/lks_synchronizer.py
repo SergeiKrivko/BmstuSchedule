@@ -2,11 +2,13 @@
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-nested-blocks
 
+import hashlib
 from functools import lru_cache
 
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import app.clients.lks.models as lks
 from app.clients.lks.client import LksClient, get_lks_client
 from app.clients.lks.models import StructureNode
 from app.db.database import ISessionMaker
@@ -64,9 +66,17 @@ class LksSynchronizer:
         self.audience_repository = audience_repository
         self.schedule_pair_repository = schedule_pair_repository
 
+        self.__synced_audiences_cache: dict[str, Audience] = {}
+        self.__synced_disciplines_cache: dict[str, Discipline] = {}
+        self.__synced_teachers_cache: dict[str, Teacher] = {}
+
     async def synchronize(self, sessionmaker: ISessionMaker, sync_id: int) -> None:
+        self.__drop_cache()
+
         groups = await self._sync_structure(sessionmaker, sync_id)
         await self._sync_schedule(sessionmaker, sync_id, groups)
+
+        self.__drop_cache()
 
     async def _sync_structure(
         self,
@@ -120,7 +130,7 @@ class LksSynchronizer:
         self,
         sessionmaker: ISessionMaker,
         sync_id: int,
-        pair,
+        pair: lks.SchedulePair,
         group: Group,
     ) -> None:
         async with sessionmaker() as session:
@@ -142,11 +152,17 @@ class LksSynchronizer:
         self,
         session: AsyncSession,
         sync_id: int,
-        teachers,
+        teachers: list[lks.Teacher],
     ) -> list[Teacher]:
         logger.info("Syncing teachers")
         teacher_models = []
         for teacher in teachers:
+            unique_field = str(teacher.id)
+            t = self.__synced_teachers_cache.get(unique_field)
+            if t:
+                teacher_models.append(t)
+                continue
+
             t = await self.teacher_repository.get_by_lks_id(session, teacher.id)
             if not t:
                 t = Teacher(
@@ -156,6 +172,7 @@ class LksSynchronizer:
                     lks_id=teacher.id,
                 )
             t.sync_id = sync_id
+            self.__synced_teachers_cache[unique_field] = t
             teacher_models.append(t)
             await self.teacher_repository.add(session, t)
         return teacher_models
@@ -164,39 +181,64 @@ class LksSynchronizer:
         self,
         session: AsyncSession,
         sync_id: int,
-        audiences,
+        audiences: list[lks.Audience],
     ) -> list[Audience]:
         logger.info("Syncing audiences")
         audience_models = []
         for audience in audiences:
-            a = await self.audience_repository.get_by_lks_id(session, audience.id)
+            # у аудиторий может не быть lks_id, поэтому смотрим также на name и building
+            unique_field = (
+                hashlib.md5(  # noqa: S324  безопасно, т.к. хеш только для поиска
+                    f"{audience.id}_{audience.name}_{audience.building}".encode(),
+                ).hexdigest()
+            )
+            a = self.__synced_audiences_cache.get(unique_field)
+            if a:
+                audience_models.append(a)
+                continue
+
+            a = await self.audience_repository.get_by_unique_field(
+                session,
+                unique_field,
+            )
             if not a:
                 a = Audience(
                     name=audience.name,
                     lks_id=audience.id,
                     building=audience.building,
+                    unique_field=unique_field,
                 )
             a.sync_id = sync_id
-            await self.audience_repository.add(session, a)
+            self.__synced_audiences_cache[unique_field] = a
             audience_models.append(a)
+            await self.audience_repository.add(session, a)
         return audience_models
 
     async def _sync_discipline(
         self,
         session: AsyncSession,
         sync_id: int,
-        discipline,
+        discipline: lks.Discipline,
     ) -> Discipline:
         logger.info(f"Syncing discipline {discipline.abbr}")
-        d = await self.discipline_repository.get_by_abbr(session, discipline.abbr)
+        unique_field = hashlib.md5(  # noqa: S324  безопасно, т.к. хеш только для поиска
+            f"{discipline.abbr}_{discipline.act_type}".encode(),
+        ).hexdigest()
+        d = self.__synced_disciplines_cache.get(unique_field)
+        if d:
+            return d
+
+        d = await self.discipline_repository.get_by_unique_field(session, unique_field)
         if not d:
             d = Discipline(
                 abbr=discipline.abbr,
                 full_name=discipline.full_name,
                 short_name=discipline.short_name,
                 act_type=discipline.act_type,
+                unique_field=unique_field,
             )
         d.sync_id = sync_id
+        self.__synced_disciplines_cache[unique_field] = d
         await self.discipline_repository.add(session, d)
         return d
 
@@ -204,29 +246,41 @@ class LksSynchronizer:
         self,
         session: AsyncSession,
         sync_id: int,
-        pair,
+        pair: lks.SchedulePair,
         teachers: list[Teacher],
         discipline: Discipline,
         audiences: list[Audience],
         group: Group,
     ) -> None:
-        # у пар нет lks_id, поэтому либо надо каждый раз создавать новые
-        # (текущая реализация), либо искать пару указанных групп с указанными преподами
-        # в указанных аудиториях (и если такая есть, то обновлять ее),
-        # либо для простоты при создании считать какой-то хеш по всем этим параметрам
-        # и класть его в бд, чтобы использовать для поиска
         logger.info(f"Syncing schedule pair {pair.discipline.abbr} {group.abbr}")
-        sp = SchedulePair(
-            day=DayOfWeek.from_lks(pair.day),
-            week=Week.from_lks(pair.week),
-            start_time=pair.start_time,
-            end_time=pair.end_time,
-            discipline_id=discipline.id,
-            groups=[group],
-            teachers=teachers,
-            audiences=audiences,
-            sync_id=sync_id,
+
+        # считаем, что пары совпадают, если они проходят в одно время в одном месте
+        day = DayOfWeek.from_lks(pair.day)
+        week = Week.from_lks(pair.week)
+        start_time = pair.start_time
+        end_time = pair.end_time
+        audience_ids = sorted(a.id for a in audiences)
+        unique_field = hashlib.md5(  # noqa: S324  безопасно, т.к. хеш только для поиска
+            f"{day}_{week}_{start_time}_{end_time}_{audience_ids}".encode(),
+        ).hexdigest()
+
+        sp = await self.schedule_pair_repository.get_by_unique_field(
+            session,
+            unique_field,
         )
+        if not sp:
+            sp = SchedulePair(
+                day=day,
+                week=week,
+                start_time=start_time,
+                end_time=end_time,
+                discipline_id=discipline.id,
+                groups=[group],
+                teachers=teachers,
+                audiences=audiences,
+                sync_id=sync_id,
+                unique_field=unique_field,
+            )
         await self.schedule_pair_repository.add(session, sp)
 
     async def _sync_group(
@@ -296,6 +350,11 @@ class LksSynchronizer:
         u.sync_id = sync_id
         await self.university_repository.add(session, u)
         return u
+
+    def __drop_cache(self) -> None:
+        self.__synced_audiences_cache.clear()
+        self.__synced_disciplines_cache.clear()
+        self.__synced_teachers_cache.clear()
 
 
 @lru_cache(maxsize=1)

@@ -15,6 +15,12 @@ class Discipline(Base, AbbrMixin, SyncMixin):
     full_name: Mapped[str] = mapped_column(String, nullable=False)
     short_name: Mapped[str] = mapped_column(String, nullable=False)
     act_type: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    unique_field: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+        unique=True,
+        index=True,
+    )
 
     schedule_pairs: Mapped[list["SchedulePair"]] = relationship(
         "SchedulePair",

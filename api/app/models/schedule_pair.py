@@ -22,7 +22,12 @@ class SchedulePair(Base, SyncMixin):
     week: Mapped[str] = mapped_column(String, nullable=False)
     start_time: Mapped[str] = mapped_column(String, nullable=False)
     end_time: Mapped[str] = mapped_column(String, nullable=False)
-
+    unique_field: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+        unique=True,
+        index=True,
+    )
     discipline_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("disciplines.id"),

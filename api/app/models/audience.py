@@ -17,6 +17,12 @@ class Audience(Base, SyncMixin):
     lks_id: Mapped[Optional[UUID]] = mapped_column(Uuid, nullable=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     building: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    unique_field: Mapped[str] = mapped_column(
+        String,
+        nullable=False,
+        unique=True,
+        index=True,
+    )
     map_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     schedule_pairs: Mapped[list["SchedulePair"]] = relationship(

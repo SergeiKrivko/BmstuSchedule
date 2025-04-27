@@ -1,10 +1,10 @@
 from functools import lru_cache
 
 from app.models.audience import Audience
-from app.repos.base_repo import BaseRepo
+from app.repos.base_repo import UniqueFieldRepo
 
 
-class AudienceRepo(BaseRepo[Audience]):
+class AudienceRepo(UniqueFieldRepo[Audience]):
     model = Audience
 
 
