@@ -53,7 +53,7 @@ install: ## Install dependencies
 	poetry install --no-interaction --no-ansi
 
 run-api: ## Run app
-	ENV=local $(POETRY_RUN) uvicorn app.api.app:create_app
+	ENV=local $(POETRY_RUN) uvicorn app.api.app:create_app --reload
 
 run-environment: ## Run environment
 	@export $$(cat envs/common.env | xargs); export $$(cat envs/local.env | xargs); docker compose up -d
