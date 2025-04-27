@@ -10,9 +10,12 @@ class TeacherBase(BaseModel):
     last_name: str = Field(description="Teacher last name", examples=["Рязанова"])
 
     departments: list[str] = Field(
+        default_factory=list,
         description="List of department abbreviations where teacher works",
         examples=["ИУ7"],
     )
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RoomBase(BaseModel):
