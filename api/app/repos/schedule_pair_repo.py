@@ -1,10 +1,10 @@
 from functools import lru_cache
 
 from app.models.schedule_pair import SchedulePair
-from app.repos.base_repo import BaseRepo
+from app.repos.base_repo import UniqueFieldRepo
 
 
-class SchedulePairRepo(BaseRepo[SchedulePair]):
+class SchedulePairRepo(UniqueFieldRepo[SchedulePair]):
     model = SchedulePair
 
 

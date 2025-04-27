@@ -1,7 +1,7 @@
 import subprocess
-from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Path
+from fastapi import APIRouter, BackgroundTasks
+from loguru import logger
 
 from app.api.schemas.admin import PostMigrationsUpgradeAPIResponse, SyncAPIResponse
 from app.db.database import SessionMakerDep
@@ -21,30 +21,26 @@ async def sync_data(
     sync_svc: SyncSvcDep,
     bt: BackgroundTasks,
 ) -> SyncAPIResponse:
-    await sync_svc.sync_data(sessionmaker, bt)
+    await sync_svc.add_synchronization_task(sessionmaker, bt)
     return SyncAPIResponse()
 
 
 @router.post(
-    "/admin/migrations/{name}/upgrade",
+    "/admin/migrations/upgrade",
     tags=["admin"],
     summary="Database migration upgrade",
-    description="Накатывает миграции вплоть до указанной ревизии на PostgreSQL с помощью alembic. Ожидается, что в основном ручка будет вызываться с `name=head`",
+    description=(
+        "Накатывает миграции вплоть до head ревизии "
+        "на PostgreSQL с помощью alembic. "
+    ),
     response_model=PostMigrationsUpgradeAPIResponse,
 )
-async def post_migrations_upgrade(
-    name: Annotated[str, Path(description="Название ревизии", example="head")],
-) -> PostMigrationsUpgradeAPIResponse:
-    try:
-        alembic_output = subprocess.check_output(
-            ["poetry", "run", "alembic", "upgrade", name],
-            text=True,
-            stderr=subprocess.STDOUT,
-        )
+async def post_migrations_upgrade() -> PostMigrationsUpgradeAPIResponse:
+    alembic_output = subprocess.check_output(  # noqa: S603
+        ["poetry", "run", "alembic", "upgrade", "head"],  # noqa: S607
+        text=True,
+        stderr=subprocess.STDOUT,
+    )
 
-        print(f"Migration upgrade successful: {alembic_output}.")
-        return PostMigrationsUpgradeAPIResponse(data=alembic_output)
-    except Exception as e:
-        err = "Failed to upgrade migrations"
-        print(f"{err}: {e}.")
-        raise RuntimeError(err)
+    logger.info(f"Migration upgrade successful: {alembic_output}.")
+    return PostMigrationsUpgradeAPIResponse(data=alembic_output)

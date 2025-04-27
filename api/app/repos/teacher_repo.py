@@ -1,10 +1,10 @@
 from functools import lru_cache
 
 from app.models.teacher import Teacher
-from app.repos.base_repo import BaseRepo
+from app.repos.base_repo import LksIdRepo
 
 
-class TeacherRepo(BaseRepo[Teacher]):
+class TeacherRepo(LksIdRepo[Teacher]):
     model = Teacher
 
 

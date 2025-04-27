@@ -18,7 +18,9 @@ class StructureNode(BaseModel):
     abbr: Optional[str] = None
     name: Optional[str] = None
     id: Annotated[Optional[UUID], Field(alias="uuid")] = None
-    children: Annotated[list["StructureNode"], Field(default_factory=list)] = Field(default_factory=list)
+    children: Annotated[list["StructureNode"], Field(default_factory=list)] = Field(
+        default_factory=list,
+    )
     type: Optional[StructureNodeType] = Field(None, alias="nodeType")
     department_id: Annotated[Optional[UUID], Field(alias="parentUuid")] = None
     semester_num: Annotated[Optional[int], Field(alias="semester")] = None
