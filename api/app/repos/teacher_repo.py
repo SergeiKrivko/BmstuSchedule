@@ -3,9 +3,12 @@ from typing import Optional, Sequence
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.functions import count
 
+from app.domain.schedule import ScheduleResult
 from app.models.group import Group
+from app.models.many_to_many import schedule_pair_teacher
 from app.models.schedule_pair import SchedulePair
 from app.models.teacher import Teacher
 from app.repos.base_repo import LksIdRepo
@@ -62,6 +65,40 @@ class TeacherRepo(LksIdRepo[Teacher]):
         teachers = result.unique().scalars().all()
 
         return teachers, total or 0
+
+    async def get_schedule_by_teacher_id(
+        self,
+        session: AsyncSession,
+        teacher_id: int,
+    ) -> Optional[ScheduleResult[Teacher]]:
+        teacher_query = select(self.model).where(self.model.id == teacher_id)
+        teacher_result = await session.execute(teacher_query)
+        teacher = teacher_result.scalars().first()
+
+        if not teacher:
+            return None
+
+        pairs_query = (
+            select(SchedulePair)
+            .options(
+                joinedload(SchedulePair.teachers),
+                joinedload(SchedulePair.audiences),
+                joinedload(SchedulePair.discipline),
+                joinedload(SchedulePair.groups),
+            )
+            .join(
+                schedule_pair_teacher,
+                SchedulePair.id == schedule_pair_teacher.c.schedule_pair_id,
+            )
+            .where(
+                schedule_pair_teacher.c.teacher_id == teacher_id,
+            )
+        )
+
+        pairs_result = await session.execute(pairs_query)
+        pairs = pairs_result.unique().scalars().all()
+
+        return ScheduleResult[Teacher](entity=teacher, pairs=pairs)
 
 
 @lru_cache(maxsize=1)

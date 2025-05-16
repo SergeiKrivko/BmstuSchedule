@@ -73,8 +73,16 @@ async def get_teacher(
     response_model=TeacherScheduleResponse,
 )
 async def get_teacher_schedule(
+    sessionmaker: SessionMakerDep,
+    teacher_svc: TeacherSvcDep,
     teacher_id: Annotated[int, Path(description="ID of the teacher")],
-    dt_from: Annotated[Optional[datetime], Query(description="Start datetime")] = None,
-    dt_to: Annotated[Optional[datetime], Query(description="End datetime")] = None,
+    dt_from: Annotated[datetime, Query(description="Start datetime")],
+    dt_to: Annotated[datetime, Query(description="End datetime")],
 ) -> TeacherScheduleResponse:
-    raise NotImplementedError
+    teacher_schedule = await teacher_svc.get_teacher_schedule(
+        sessionmaker=sessionmaker,
+        teacher_id=teacher_id,
+        dt_from=dt_from,
+        dt_to=dt_to,
+    )
+    return TeacherScheduleResponse(data=teacher_schedule)
