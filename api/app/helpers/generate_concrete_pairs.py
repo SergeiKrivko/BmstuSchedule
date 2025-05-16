@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 from typing import Sequence
 
 from app.api.schemas.base import DisciplineBase, GroupBase, RoomBase, TeacherBase
+from app.api.schemas.schedule_pair import SchedulePairRead
 from app.domain.day_of_week import DayOfWeek
-from app.domain.schedule import ConcreteSchedulePair
 from app.domain.timeslot import TimeSlot
 from app.domain.week import Week
 from app.models.schedule_pair import SchedulePair
@@ -13,7 +13,7 @@ def generate_concrete_pairs(
     schedule_pairs: Sequence[SchedulePair],
     dt_from: datetime,
     dt_to: datetime,
-) -> list[ConcreteSchedulePair]:
+) -> list[SchedulePairRead]:
     """Generate concrete schedule pairs with specific dates."""
     concrete_pairs = []
     current_date = dt_from.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -36,7 +36,7 @@ def generate_concrete_pairs_for_date(
     current_date: datetime,
     dt_from: datetime,
     dt_to: datetime,
-) -> list[ConcreteSchedulePair]:
+) -> list[SchedulePairRead]:
     """Generate concrete schedule pairs for a specific date."""
     week = Week.from_datetime(current_date)
     day_of_week = DayOfWeek.from_datetime(current_date)
@@ -68,7 +68,7 @@ def generate_concrete_pairs_for_date(
         if concrete_end < dt_from or concrete_start > dt_to:
             continue
 
-        concrete_pair = ConcreteSchedulePair(
+        concrete_pair = SchedulePairRead(
             id=pair.id,
             time_slot=TimeSlot(
                 start_time=concrete_start,
@@ -94,7 +94,7 @@ def generate_concrete_pairs_for_date(
                 )
                 for teacher in pair.teachers
             ],
-            audiences=[
+            rooms=[
                 RoomBase(
                     id=audience.id,
                     name=audience.name,

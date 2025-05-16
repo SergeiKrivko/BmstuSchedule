@@ -1,18 +1,15 @@
-from pydantic import BaseModel
+from typing import Generic, TypeVar
 
-from app.api.schemas.base import DisciplineBase, GroupBase, RoomBase, TeacherBase
-from app.domain.timeslot import TimeSlot
+from pydantic import BaseModel, ConfigDict
 
+from app.models.base import Base
+from app.models.schedule_pair import SchedulePair
 
-class ConcreteSchedulePair(BaseModel):
-    id: int
-    time_slot: TimeSlot
-    disciplines: list[DisciplineBase]
-    teachers: list[TeacherBase]
-    audiences: list[RoomBase]
-    groups: list[GroupBase]
+T = TypeVar("T", bound=Base)
 
 
-class GroupScheduleResult(BaseModel):
-    group: GroupBase
-    schedule_pairs: list[ConcreteSchedulePair]
+class ScheduleResult(BaseModel, Generic[T]):
+    entity: T
+    pairs: list[SchedulePair]
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)

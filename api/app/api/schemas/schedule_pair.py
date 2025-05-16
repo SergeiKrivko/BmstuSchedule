@@ -5,6 +5,7 @@ from app.domain.timeslot import TimeSlot
 
 
 class SchedulePairRead(BaseModel):
+    id: int = Field(description="ID of the schedule pair")
     time_slot: TimeSlot = Field(description="Time slot")
     groups: list[GroupBase] = Field(description="List of groups")
     disciplines: list[DisciplineBase] = Field(description="List of disciplines")
