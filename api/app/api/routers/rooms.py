@@ -8,7 +8,8 @@ from app.api.schemas.room import (
     RoomResponse,
     RoomScheduleResponse,
 )
-from app.domain.day_of_week import DayOfWeek
+from app.db.database import SessionMakerDep
+from app.services.room_svc import RoomSvcDep
 
 router = APIRouter()
 
@@ -20,6 +21,8 @@ router = APIRouter()
     response_model=RoomListResponse,
 )
 async def get_rooms(
+    sessionmaker: SessionMakerDep,
+    room_svc: RoomSvcDep,
     building: Annotated[
         Optional[str],
         Query(description="Filter rooms by building"),
@@ -27,7 +30,13 @@ async def get_rooms(
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
 ) -> RoomListResponse:
-    raise NotImplementedError
+    rooms = await room_svc.get_rooms(
+        sessionmaker=sessionmaker,
+        building=building,
+        page=page,
+        size=size,
+    )
+    return RoomListResponse(data=rooms)
 
 
 @router.get(
@@ -37,9 +46,15 @@ async def get_rooms(
     response_model=RoomResponse,
 )
 async def get_room(
+    sessionmaker: SessionMakerDep,
+    room_svc: RoomSvcDep,
     room_id: Annotated[int, Path(description="ID of the room")],
 ) -> RoomResponse:
-    raise NotImplementedError
+    room = await room_svc.get_room(
+        sessionmaker=sessionmaker,
+        room_id=room_id,
+    )
+    return RoomResponse(data=room)
 
 
 @router.get(
@@ -49,12 +64,19 @@ async def get_room(
     response_model=RoomScheduleResponse,
 )
 async def get_room_schedule(
+    sessionmaker: SessionMakerDep,
+    room_svc: RoomSvcDep,
     room_id: Annotated[int, Path(description="ID of the room")],
-    day: Annotated[Optional[DayOfWeek], Query(description="Day of week")] = None,
-    dt_from: Annotated[Optional[datetime], Query(description="Start datetime")] = None,
-    dt_to: Annotated[Optional[datetime], Query(description="End datetime")] = None,
+    dt_from: Annotated[datetime, Query(description="Start datetime")],
+    dt_to: Annotated[datetime, Query(description="End datetime")],
 ) -> RoomScheduleResponse:
-    raise NotImplementedError
+    room_schedule = await room_svc.get_room_schedule(
+        sessionmaker=sessionmaker,
+        room_id=room_id,
+        dt_from=dt_from,
+        dt_to=dt_to,
+    )
+    return RoomScheduleResponse(data=room_schedule)
 
 
 @router.get(
@@ -64,6 +86,8 @@ async def get_room_schedule(
     response_model=RoomListResponse,
 )
 async def get_free_rooms(
+    sessionmaker: SessionMakerDep,
+    room_svc: RoomSvcDep,
     dt_from: Annotated[datetime, Query(description="Start datetime")],
     dt_to: Annotated[datetime, Query(description="End datetime")],
     building: Annotated[
