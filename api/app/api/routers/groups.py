@@ -81,8 +81,16 @@ async def get_group(
     response_model=GroupScheduleResponse,
 )
 async def get_group_schedule(
+    sessionmaker: SessionMakerDep,
+    group_svc: GroupSvcDep,
     group_id: Annotated[int, Path(description="ID of the group")],
     dt_from: Annotated[datetime, Query(description="Start datetime")],
     dt_to: Annotated[datetime, Query(description="End datetime")],
 ) -> GroupScheduleResponse:
-    raise NotImplementedError
+    schedule = await group_svc.get_group_schedule(
+        sessionmaker=sessionmaker,
+        group_id=group_id,
+        dt_from=dt_from,
+        dt_to=dt_to,
+    )
+    return GroupScheduleResponse(data=schedule)
