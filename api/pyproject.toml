@@ -23,6 +23,7 @@ async-lru = "^2.0.5"
 asyncpg = "^0.29.0"
 alembic = "^1.15.2"
 loguru = "^0.7.3"
+aiocache = "^0.12.3"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=25.1.0"

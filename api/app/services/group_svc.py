@@ -1,7 +1,7 @@
 from datetime import datetime
-from functools import lru_cache
 from typing import Annotated, Optional
 
+from aiocache import cached
 from fastapi import Depends
 
 from app.api.schemas.base import GroupBase
@@ -9,14 +9,20 @@ from app.api.schemas.group import (
     GroupList,
     GroupSchedule,
 )
+from app.core.schedule_manager import ScheduleManager, schedule_manager
 from app.db.database import ISessionMaker
 from app.domain.errors import NotFoundError
-from app.helpers import generate_concrete_pairs
 from app.repos.group_repo import GroupRepo, group_repo
+from app.services.schedule_mixin import ScheduleMixin
 
 
-class GroupSvc:
-    def __init__(self, group_repository: GroupRepo):
+class GroupSvc(ScheduleMixin):
+    def __init__(
+        self,
+        group_repository: GroupRepo,
+        schedule_manager: ScheduleManager,
+    ) -> None:
+        super().__init__(schedule_manager)
         self.group_repo = group_repository
 
     async def get_group(
@@ -79,8 +85,8 @@ class GroupSvc:
                 msg = "Group schedule not found"
                 raise NotFoundError(msg)
 
-            concrete_pairs = generate_concrete_pairs(
-                schedule_pairs=schedule_result.pairs,
+            concrete_pairs = self._generate_concrete_pairs(
+                schedule_result=schedule_result,
                 dt_from=dt_from,
                 dt_to=dt_to,
             )
@@ -96,9 +102,13 @@ class GroupSvc:
             )
 
 
-@lru_cache(maxsize=1)
-def group_svc() -> GroupSvc:
-    return GroupSvc(group_repository=group_repo())
+@cached(ttl=0)
+async def group_svc() -> GroupSvc:
+    manager = await schedule_manager()
+    return GroupSvc(
+        group_repository=group_repo(),
+        schedule_manager=manager,
+    )
 
 
 GroupSvcDep = Annotated[GroupSvc, Depends(group_svc)]
