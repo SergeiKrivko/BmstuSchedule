@@ -6,14 +6,20 @@ from fastapi import Depends
 
 from app.api.schemas.base import RoomBase
 from app.api.schemas.room import RoomList, RoomSchedule
+from app.core.schedule_manager import ScheduleManager, schedule_manager
 from app.db.database import ISessionMaker
 from app.domain.errors import NotFoundError
-from app.helpers import generate_concrete_pairs
 from app.repos.audience_repo import AudienceRepo, audience_repo
+from app.services.schedule_mixin import ScheduleMixin
 
 
-class RoomSvc:
-    def __init__(self, audience_repository: AudienceRepo):
+class RoomSvc(ScheduleMixin):
+    def __init__(
+        self,
+        audience_repository: AudienceRepo,
+        schedule_manager: ScheduleManager,
+    ) -> None:
+        super().__init__(schedule_manager)
         self.audience_repo = audience_repository
 
     async def get_room(
@@ -80,8 +86,8 @@ class RoomSvc:
                 msg = "Room schedule not found"
                 raise NotFoundError(msg)
 
-            concrete_pairs = generate_concrete_pairs(
-                schedule_pairs=schedule_result.pairs,
+            concrete_pairs = await self._generate_concrete_pairs(
+                schedule_result=schedule_result,
                 dt_from=dt_from,
                 dt_to=dt_to,
             )
@@ -99,7 +105,10 @@ class RoomSvc:
 
 @lru_cache(maxsize=1)
 def room_svc() -> RoomSvc:
-    return RoomSvc(audience_repository=audience_repo())
+    return RoomSvc(
+        audience_repository=audience_repo(),
+        schedule_manager=schedule_manager(),
+    )
 
 
 RoomSvcDep = Annotated[RoomSvc, Depends(room_svc)]

@@ -1,3 +1,4 @@
+from datetime import date
 from enum import IntEnum, StrEnum
 from typing import Annotated, Optional
 from uuid import UUID
@@ -59,6 +60,11 @@ class Week(StrEnum):
     EVEN = "zn"
 
 
+class WeekRu(StrEnum):
+    ODD = "чс"
+    EVEN = "зн"
+
+
 class Day(IntEnum):
     MON = 1
     TUE = 2
@@ -86,9 +92,21 @@ class Schedule(BaseModel):
     data: list[SchedulePair] = Field(alias="schedule")
 
 
+class CurrentSchedule(BaseModel):
+    term: int
+    week_number: int = Field(alias="weekNumber")
+    week_ru: WeekRu = Field(alias="weekShortName")
+    semester_starts: date = Field(alias="semesterStarts")
+    semester_ends: date = Field(alias="semesterEnds")
+
+
 class StructureResponseBody(BaseModel):
     data: StructureNode
 
 
 class ScheduleResponseBody(BaseModel):
     data: Schedule
+
+
+class CurrentScheduleResponseBody(BaseModel):
+    data: CurrentSchedule

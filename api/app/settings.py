@@ -48,6 +48,19 @@ class DbSettings(EnvSettings):
         return f"postgresql+asyncpg://{self.access_str}"
 
 
+class ScheduleManagerSettings(EnvSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="SCHEDULE_MANAGER__",
+    )
+
+    current_schedule_cache_ttl_sec: int = 86400  # 24h
+
+
+@lru_cache(maxsize=1)
+def schedule_manager_settings() -> ScheduleManagerSettings:
+    return ScheduleManagerSettings()
+
+
 @lru_cache(maxsize=1)
 def lks_settings() -> LksSettings:
     return LksSettings()

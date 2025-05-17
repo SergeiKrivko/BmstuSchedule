@@ -6,14 +6,20 @@ from fastapi import Depends
 
 from app.api.schemas.base import TeacherBase
 from app.api.schemas.teacher import TeacherList, TeacherSchedule
+from app.core.schedule_manager import ScheduleManager, schedule_manager
 from app.db.database import ISessionMaker
 from app.domain.errors import NotFoundError
-from app.helpers import generate_concrete_pairs
 from app.repos.teacher_repo import TeacherRepo, teacher_repo
+from app.services.schedule_mixin import ScheduleMixin
 
 
-class TeacherSvc:
-    def __init__(self, teacher_repository: TeacherRepo):
+class TeacherSvc(ScheduleMixin):
+    def __init__(
+        self,
+        teacher_repository: TeacherRepo,
+        schedule_manager: ScheduleManager,
+    ) -> None:
+        super().__init__(schedule_manager)
         self.teacher_repository = teacher_repository
 
     async def get_teacher(
@@ -74,8 +80,8 @@ class TeacherSvc:
                 msg = "Teacher schedule not found"
                 raise NotFoundError(msg)
 
-            concrete_pairs = generate_concrete_pairs(
-                schedule_pairs=schedule_result.pairs,
+            concrete_pairs = await self._generate_concrete_pairs(
+                schedule_result=schedule_result,
                 dt_from=dt_from,
                 dt_to=dt_to,
             )
@@ -93,7 +99,10 @@ class TeacherSvc:
 
 @lru_cache(maxsize=1)
 def teacher_svc() -> TeacherSvc:
-    return TeacherSvc(teacher_repository=teacher_repo())
+    return TeacherSvc(
+        teacher_repository=teacher_repo(),
+        schedule_manager=schedule_manager(),
+    )
 
 
 TeacherSvcDep = Annotated[TeacherSvc, Depends(teacher_svc)]
