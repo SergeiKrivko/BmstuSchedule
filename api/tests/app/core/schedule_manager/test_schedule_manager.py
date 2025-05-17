@@ -7,7 +7,7 @@ from app import domain
 from app.api import schemas
 from app.api.schemas.schedule_pair import SchedulePairRead
 from app.clients.lks.models import CurrentSchedule, WeekRu
-from app.core.schedule_manager import InvalidTimeFormatError, ScheduleManager
+from app.core.schedule_manager import ScheduleManager
 from app.models.discipline import Discipline
 from app.models.schedule_pair import SchedulePair
 
@@ -263,7 +263,7 @@ async def test_generate_concrete_pairs_invalid_time_format(
         unique_field="test",
     )
 
-    with pytest.raises(InvalidTimeFormatError):
+    with pytest.raises(domain.errors.InvalidTimeFormatError):
         await schedule_manager.generate_concrete_pairs(
             schedule_pairs=[invalid_pair],
             dt_from=monday_time_slot.start_time,
