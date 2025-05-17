@@ -1,3 +1,4 @@
+from app.core.schedule_manager.exceptions import InvalidTimeFormatError
 from app.core.schedule_manager.manager import (
     ScheduleManager,
     ScheduleManagerDep,
@@ -5,6 +6,7 @@ from app.core.schedule_manager.manager import (
 )
 
 __all__ = [
+    "InvalidTimeFormatError",
     "ScheduleManager",
     "ScheduleManagerDep",
     "schedule_manager",

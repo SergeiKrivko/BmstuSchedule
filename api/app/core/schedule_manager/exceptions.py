@@ -1,0 +1,2 @@
+class InvalidTimeFormatError(ValueError):
+    pass
