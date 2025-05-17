@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from typing import Annotated, Optional, Sequence
+from functools import lru_cache
+from typing import Annotated, Sequence
 
 from aiocache import cached
 from fastapi import Depends
@@ -12,17 +13,14 @@ from app.domain.day_of_week import DayOfWeek
 from app.domain.timeslot import TimeSlot
 from app.domain.week import Week
 from app.models.schedule_pair import SchedulePair
+from app.settings import schedule_manager_settings
 
 
 class ScheduleManager:
     def __init__(self, lks_client: LksClient) -> None:
         self.lks_client = lks_client
-        self._current_schedule: Optional[CurrentSchedule] = None
 
-    async def initialize(self) -> None:
-        self._current_schedule = await self.lks_client.get_current_schedule()
-
-    def generate_concrete_pairs(
+    async def generate_concrete_pairs(
         self,
         schedule_pairs: Sequence[SchedulePair],
         dt_from: datetime,
@@ -34,7 +32,7 @@ class ScheduleManager:
 
         while dt_to - current_date >= timedelta(days=1):
             concrete_pairs.extend(
-                self._generate_concrete_pairs_for_date(
+                await self._generate_concrete_pairs_for_date(
                     schedule_pairs,
                     current_date,
                     dt_from,
@@ -44,7 +42,7 @@ class ScheduleManager:
             current_date += timedelta(days=1)
         return concrete_pairs
 
-    def _generate_concrete_pairs_for_date(
+    async def _generate_concrete_pairs_for_date(
         self,
         schedule_pairs: Sequence[SchedulePair],
         current_date: datetime,
@@ -52,7 +50,8 @@ class ScheduleManager:
         dt_to: datetime,
     ) -> list[SchedulePairRead]:
         """Generate concrete schedule pairs for a specific date."""
-        week = Week.from_datetime(current_date, self.current_week())
+        current_week = await self.current_week()
+        week = Week.from_datetime(current_date, current_week)
         day_of_week = DayOfWeek.from_datetime(current_date)
 
         concrete_pairs = []
@@ -131,18 +130,18 @@ class ScheduleManager:
 
         return concrete_pairs
 
-    def current_week(self) -> Week:
-        if self._current_schedule is None:
-            msg = "Schedule manager is not initialized"
-            raise RuntimeError(msg)
-        return Week.from_lks_ru(self._current_schedule.week_ru)
+    async def current_week(self) -> Week:
+        current_schedule = await self.current_schedule()
+        return Week.from_lks_ru(current_schedule.week_ru)
+
+    @cached(ttl=schedule_manager_settings().current_schedule_cache_ttl_sec)
+    async def current_schedule(self) -> CurrentSchedule:
+        return await self.lks_client.get_current_schedule()
 
 
-@cached(ttl=0)
-async def schedule_manager() -> ScheduleManager:
-    manager = ScheduleManager(lks_client=get_lks_client())
-    await manager.initialize()
-    return manager
+@lru_cache
+def schedule_manager() -> ScheduleManager:
+    return ScheduleManager(lks_client=get_lks_client())
 
 
 ScheduleManagerDep = Annotated[ScheduleManager, Depends(schedule_manager)]

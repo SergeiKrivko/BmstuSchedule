@@ -1,7 +1,7 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import Annotated, Optional
 
-from aiocache import cached
 from fastapi import Depends
 
 from app.api.schemas.base import RoomBase
@@ -86,7 +86,7 @@ class RoomSvc(ScheduleMixin):
                 msg = "Room schedule not found"
                 raise NotFoundError(msg)
 
-            concrete_pairs = self._generate_concrete_pairs(
+            concrete_pairs = await self._generate_concrete_pairs(
                 schedule_result=schedule_result,
                 dt_from=dt_from,
                 dt_to=dt_to,
@@ -103,12 +103,11 @@ class RoomSvc(ScheduleMixin):
             )
 
 
-@cached(ttl=0)
-async def room_svc() -> RoomSvc:
-    manager = await schedule_manager()
+@lru_cache
+def room_svc() -> RoomSvc:
     return RoomSvc(
         audience_repository=audience_repo(),
-        schedule_manager=manager,
+        schedule_manager=schedule_manager(),
     )
 
 

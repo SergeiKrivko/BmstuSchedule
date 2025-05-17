@@ -1,7 +1,7 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import Annotated, Optional
 
-from aiocache import cached
 from fastapi import Depends
 
 from app.api.schemas.base import TeacherBase
@@ -80,7 +80,7 @@ class TeacherSvc(ScheduleMixin):
                 msg = "Teacher schedule not found"
                 raise NotFoundError(msg)
 
-            concrete_pairs = self._generate_concrete_pairs(
+            concrete_pairs = await self._generate_concrete_pairs(
                 schedule_result=schedule_result,
                 dt_from=dt_from,
                 dt_to=dt_to,
@@ -97,12 +97,11 @@ class TeacherSvc(ScheduleMixin):
             )
 
 
-@cached(ttl=0)
-async def teacher_svc() -> TeacherSvc:
-    manager = await schedule_manager()
+@lru_cache
+def teacher_svc() -> TeacherSvc:
     return TeacherSvc(
         teacher_repository=teacher_repo(),
-        schedule_manager=manager,
+        schedule_manager=schedule_manager(),
     )
 
 

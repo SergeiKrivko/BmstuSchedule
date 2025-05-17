@@ -1,7 +1,7 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import Annotated, Optional
 
-from aiocache import cached
 from fastapi import Depends
 
 from app.api.schemas.base import GroupBase
@@ -85,7 +85,7 @@ class GroupSvc(ScheduleMixin):
                 msg = "Group schedule not found"
                 raise NotFoundError(msg)
 
-            concrete_pairs = self._generate_concrete_pairs(
+            concrete_pairs = await self._generate_concrete_pairs(
                 schedule_result=schedule_result,
                 dt_from=dt_from,
                 dt_to=dt_to,
@@ -102,12 +102,11 @@ class GroupSvc(ScheduleMixin):
             )
 
 
-@cached(ttl=0)
+@lru_cache
 async def group_svc() -> GroupSvc:
-    manager = await schedule_manager()
     return GroupSvc(
         group_repository=group_repo(),
-        schedule_manager=manager,
+        schedule_manager=schedule_manager(),
     )
 
 
