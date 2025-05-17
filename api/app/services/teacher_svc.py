@@ -97,7 +97,7 @@ class TeacherSvc(ScheduleMixin):
             )
 
 
-@lru_cache
+@lru_cache(maxsize=1)
 def teacher_svc() -> TeacherSvc:
     return TeacherSvc(
         teacher_repository=teacher_repo(),

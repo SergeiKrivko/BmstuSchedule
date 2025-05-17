@@ -103,7 +103,7 @@ class RoomSvc(ScheduleMixin):
             )
 
 
-@lru_cache
+@lru_cache(maxsize=1)
 def room_svc() -> RoomSvc:
     return RoomSvc(
         audience_repository=audience_repo(),

@@ -102,8 +102,8 @@ class GroupSvc(ScheduleMixin):
             )
 
 
-@lru_cache
-async def group_svc() -> GroupSvc:
+@lru_cache(maxsize=1)
+def group_svc() -> GroupSvc:
     return GroupSvc(
         group_repository=group_repo(),
         schedule_manager=schedule_manager(),
