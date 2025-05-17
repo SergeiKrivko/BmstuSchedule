@@ -5,32 +5,27 @@ from typing import Annotated, Sequence
 from aiocache import cached
 from fastapi import Depends
 
-from app.api.schemas.base import DisciplineBase, GroupBase, RoomBase, TeacherBase
-from app.api.schemas.schedule_pair import SchedulePairRead
-from app.clients.lks.client import LksClient, get_lks_client
-from app.clients.lks.models import CurrentSchedule
-from app.domain.day_of_week import DayOfWeek
-from app.domain.timeslot import TimeSlot
-from app.domain.week import Week
-from app.models.schedule_pair import SchedulePair
+from app import domain
+from app.api import schemas
+from app.clients import lks
+from app.core.schedule_manager.helpers import create_concrete_pair
 from app.settings import schedule_manager_settings
 
 
 class ScheduleManager:
-    def __init__(self, lks_client: LksClient) -> None:
+    def __init__(self, lks_client: lks.LksClient) -> None:
         self.lks_client = lks_client
 
     async def generate_concrete_pairs(
         self,
-        schedule_pairs: Sequence[SchedulePair],
+        schedule_pairs: Sequence[domain.SchedulePair],
         dt_from: datetime,
         dt_to: datetime,
-    ) -> list[SchedulePairRead]:
-        """Generate concrete schedule pairs with specific dates."""
+    ) -> list[schemas.SchedulePairRead]:
         concrete_pairs = []
         current_date = dt_from.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        while dt_to - current_date >= timedelta(days=1):
+        while current_date <= dt_to:
             concrete_pairs.extend(
                 await self._generate_concrete_pairs_for_date(
                     schedule_pairs,
@@ -44,104 +39,75 @@ class ScheduleManager:
 
     async def _generate_concrete_pairs_for_date(
         self,
-        schedule_pairs: Sequence[SchedulePair],
+        schedule_pairs: Sequence[domain.SchedulePair],
         current_date: datetime,
         dt_from: datetime,
         dt_to: datetime,
-    ) -> list[SchedulePairRead]:
-        """Generate concrete schedule pairs for a specific date."""
+    ) -> list[schemas.SchedulePairRead]:
         current_week = await self.current_week()
-        week = Week.from_datetime(current_date, current_week)
-        day_of_week = DayOfWeek.from_datetime(current_date)
+        week = domain.Week.from_datetime(current_date, current_week)
+        day_of_week = domain.DayOfWeek.from_datetime(current_date)
 
+        return self.create_concrete_pairs_for_day_and_week(
+            schedule_pairs=schedule_pairs,
+            day_of_week=day_of_week,
+            week=week,
+            current_date=current_date,
+            dt_from=dt_from,
+            dt_to=dt_to,
+        )
+
+    @classmethod
+    def create_concrete_pairs_for_day_and_week(
+        cls,
+        schedule_pairs: Sequence[domain.SchedulePair],
+        day_of_week: domain.DayOfWeek,
+        week: domain.Week,
+        current_date: datetime,
+        dt_from: datetime,
+        dt_to: datetime,
+    ) -> list[schemas.SchedulePairRead]:
         concrete_pairs = []
         for pair in schedule_pairs:
-            if DayOfWeek(pair.day) != day_of_week:
+            if not cls.is_pair_matching_day_and_week(pair, day_of_week, week):
                 continue
 
-            if not Week(pair.week).match(week):
+            concrete_times = domain.TimeSlot.from_str_times(
+                start_time=pair.start_time,
+                end_time=pair.end_time,
+                current_date=current_date,
+            )
+
+            if not concrete_times.is_in_range(dt_from, dt_to):
                 continue
 
-            start_hour, start_minute = map(int, pair.start_time.split(":"))
-            end_hour, end_minute = map(int, pair.end_time.split(":"))
-
-            concrete_start = current_date.replace(
-                hour=start_hour,
-                minute=start_minute,
-                second=0,
-                microsecond=0,
-            )
-            concrete_end = current_date.replace(
-                hour=end_hour,
-                minute=end_minute,
-                second=0,
-                microsecond=0,
-            )
-
-            if concrete_end < dt_from or concrete_start > dt_to:
-                continue
-
-            concrete_pair = SchedulePairRead(
-                id=pair.id,
-                time_slot=TimeSlot(
-                    start_time=concrete_start,
-                    end_time=concrete_end,
-                ),
-                disciplines=[
-                    DisciplineBase(
-                        id=pair.discipline.id,
-                        abbr=pair.discipline.abbr,
-                        full_name=pair.discipline.full_name,
-                        short_name=pair.discipline.short_name,
-                        act_type=pair.discipline.act_type,
-                    ),
-                ],
-                teachers=[
-                    TeacherBase(
-                        id=teacher.id,
-                        first_name=teacher.first_name,
-                        middle_name=teacher.middle_name,
-                        last_name=teacher.last_name,
-                        # todo либо убрать это поле, либо добавить джойны
-                        departments=[],
-                    )
-                    for teacher in pair.teachers
-                ],
-                rooms=[
-                    RoomBase(
-                        id=audience.id,
-                        name=audience.name,
-                        building=audience.building,
-                        map_url=audience.map_url,
-                    )
-                    for audience in pair.audiences
-                ],
-                groups=[
-                    GroupBase(
-                        id=group.id,
-                        abbr=group.abbr,
-                        course_id=group.course_id,
-                        semester_num=group.semester_num,
-                    )
-                    for group in pair.groups
-                ],
-            )
+            concrete_pair = create_concrete_pair(pair, concrete_times)
             concrete_pairs.append(concrete_pair)
 
         return concrete_pairs
 
-    async def current_week(self) -> Week:
-        current_schedule = await self.current_schedule()
-        return Week.from_lks_ru(current_schedule.week_ru)
+    @staticmethod
+    def is_pair_matching_day_and_week(
+        pair: domain.SchedulePair,
+        day_of_week: domain.DayOfWeek,
+        week: domain.Week,
+    ) -> bool:
+        return domain.DayOfWeek(pair.day) == day_of_week and domain.Week(
+            pair.week,
+        ).match(week)
 
     @cached(ttl=schedule_manager_settings().current_schedule_cache_ttl_sec)
-    async def current_schedule(self) -> CurrentSchedule:
+    async def current_schedule(self) -> lks.CurrentSchedule:
         return await self.lks_client.get_current_schedule()
+
+    async def current_week(self) -> domain.Week:
+        current_schedule = await self.current_schedule()
+        return domain.Week.from_lks_ru(current_schedule.week_ru)
 
 
 @lru_cache
 def schedule_manager() -> ScheduleManager:
-    return ScheduleManager(lks_client=get_lks_client())
+    return ScheduleManager(lks_client=lks.get_lks_client())
 
 
 ScheduleManagerDep = Annotated[ScheduleManager, Depends(schedule_manager)]
