@@ -2,8 +2,8 @@ name: Dev API
 
 on:
   push:
-    branches-ignore:
-      - master
+#    branches-ignore:
+#      - master
     paths:
       - 'api/**'
       - '.github/workflows/dev_api.yml'
