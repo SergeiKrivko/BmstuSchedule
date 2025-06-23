@@ -1,4 +1,4 @@
-name: Dev API
+name: API
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 #      - master
     paths:
       - 'api/**'
-      - '.github/workflows/dev_api.yml'
+      - '.github/workflows/api.yml'
 
 env:
   IMAGE_NAME: 'ghcr.io/sergeikrivko/bmstuschedule'
