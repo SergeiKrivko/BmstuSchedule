@@ -47,7 +47,7 @@ class GroupRepo(LksIdRepo[Group]):
         total = await session.scalar(count_query)
 
         query = query.order_by(self.model.created_at.desc())
-        if page and size:
+        if page is not None and size is not None:
             query = query.offset((page - 1) * size).limit(size)
 
         result = await session.execute(query)
