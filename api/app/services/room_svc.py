@@ -43,8 +43,8 @@ class RoomSvc(ScheduleMixin):
         self,
         sessionmaker: ISessionMaker,
         building: Optional[str] = None,
-        page: int = 1,
-        size: int = 20,
+        page: Optional[int] = None,
+        size: Optional[int] = None,
     ) -> RoomList:
         async with sessionmaker() as session:
             rooms, total = await self.audience_repo.get_all(

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 from app.api.schemas.base import TeacherBase
@@ -13,8 +15,8 @@ class TeacherSchedule(BaseModel):
 class TeacherList(BaseModel):
     items: list[TeacherBase]
     total: int
-    page: int
-    size: int
+    page: Optional[int]
+    size: Optional[int]
 
 
 class TeacherListResponse(APIResponse):

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 from app.api.schemas.base import RoomBase
@@ -13,8 +15,8 @@ class RoomSchedule(BaseModel):
 class RoomList(BaseModel):
     items: list[RoomBase]
     total: int
-    page: int
-    size: int
+    page: Optional[int]
+    size: Optional[int]
 
 
 class RoomListResponse(APIResponse):

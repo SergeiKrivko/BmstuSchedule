@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 from app.api.schemas.base import GroupBase
@@ -13,8 +15,8 @@ class GroupSchedule(BaseModel):
 class GroupList(BaseModel):
     items: list[GroupBase]
     total: int
-    page: int
-    size: int
+    page: Optional[int]
+    size: Optional[int]
 
 
 class GroupListResponse(APIResponse):
