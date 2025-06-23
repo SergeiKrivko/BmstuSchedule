@@ -58,3 +58,11 @@ jobs:
           push: true
           tags: '${{ env.IMAGE_NAME }}:api-dev'
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Deploy
+        run: |
+          curl -X 'POST' \
+            'https://deploy-api.nachert.art/api/v1/stacks/bmstu-schedule/deployments' \
+            -H 'accept: application/json' \
+            -H 'Authorization: Basic ${{ secrets.DEPLOY_API_CREDENTIALS }}' \
+            -d ''
