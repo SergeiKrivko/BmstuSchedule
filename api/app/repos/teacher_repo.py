@@ -23,8 +23,8 @@ class TeacherRepo(LksIdRepo[Teacher]):
         name: Optional[str] = None,
         group_id: Optional[int] = None,
         department_abbr: Optional[str] = None,
-        page: int = 1,
-        size: int = 20,
+        page: Optional[int] = None,
+        size: Optional[int] = None,
     ) -> tuple[Sequence[Teacher], int]:
         query = select(self.model)
 
@@ -55,11 +55,9 @@ class TeacherRepo(LksIdRepo[Teacher]):
         count_query = select(count()).select_from(query.subquery())
         total = await session.scalar(count_query)
 
-        query = (
-            query.order_by(self.model.created_at.desc())
-            .offset((page - 1) * size)
-            .limit(size)
-        )
+        query = query.order_by(self.model.created_at.desc())
+        if page is not None and size is not None:
+            query = query.offset((page - 1) * size).limit(size)
 
         result = await session.execute(query)
         teachers = result.unique().scalars().all()

@@ -5,7 +5,7 @@ from typing import Annotated, Sequence
 from aiocache import cached
 from fastapi import Depends
 
-from app import domain
+from app import domain, models
 from app.api import schemas
 from app.clients import lks
 from app.core.schedule_manager.helpers import create_concrete_pair
@@ -18,7 +18,7 @@ class ScheduleManager:
 
     async def generate_concrete_pairs(
         self,
-        schedule_pairs: Sequence[domain.SchedulePair],
+        schedule_pairs: Sequence[models.SchedulePair],
         dt_from: datetime,
         dt_to: datetime,
     ) -> list[schemas.SchedulePairRead]:
@@ -39,7 +39,7 @@ class ScheduleManager:
 
     async def _generate_concrete_pairs_for_date(
         self,
-        schedule_pairs: Sequence[domain.SchedulePair],
+        schedule_pairs: Sequence[models.SchedulePair],
         current_date: datetime,
         dt_from: datetime,
         dt_to: datetime,
@@ -60,7 +60,7 @@ class ScheduleManager:
     @classmethod
     def create_concrete_pairs_for_day_and_week(
         cls,
-        schedule_pairs: Sequence[domain.SchedulePair],
+        schedule_pairs: Sequence[models.SchedulePair],
         day_of_week: domain.DayOfWeek,
         week: domain.Week,
         current_date: datetime,
@@ -88,7 +88,7 @@ class ScheduleManager:
 
     @staticmethod
     def is_pair_matching_day_and_week(
-        pair: domain.SchedulePair,
+        pair: models.SchedulePair,
         day_of_week: domain.DayOfWeek,
         week: domain.Week,
     ) -> bool:

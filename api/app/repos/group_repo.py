@@ -25,8 +25,8 @@ class GroupRepo(LksIdRepo[Group]):
         department_abbr: Optional[str] = None,
         faculty_abbr: Optional[str] = None,
         filial_abbr: Optional[str] = None,
-        page: int = 1,
-        size: int = 20,
+        page: Optional[int] = None,
+        size: Optional[int] = None,
     ) -> Tuple[Sequence[Group], int]:
         query = select(self.model)
 
@@ -46,11 +46,9 @@ class GroupRepo(LksIdRepo[Group]):
         count_query = select(count()).select_from(query.subquery())
         total = await session.scalar(count_query)
 
-        query = (
-            query.order_by(self.model.created_at.desc())
-            .offset((page - 1) * size)
-            .limit(size)
-        )
+        query = query.order_by(self.model.created_at.desc())
+        if page is not None and size is not None:
+            query = query.offset((page - 1) * size).limit(size)
 
         result = await session.execute(query)
         groups = result.scalars().all()

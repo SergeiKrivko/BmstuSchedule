@@ -40,8 +40,8 @@ class TeacherSvc(ScheduleMixin):
         name: Optional[str] = None,
         group_id: Optional[int] = None,
         department: Optional[str] = None,
-        page: int = 1,
-        size: int = 20,
+        page: Optional[int] = None,
+        size: Optional[int] = None,
     ) -> TeacherList:
         async with sessionmaker() as session:
             teachers, total = await self.teacher_repository.get_all(

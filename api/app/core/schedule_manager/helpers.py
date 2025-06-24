@@ -3,7 +3,7 @@ from app.api import schemas
 
 
 def create_concrete_pair(
-    pair: domain.SchedulePair,
+    pair: models.SchedulePair,
     concrete_times: domain.TimeSlot,
 ) -> schemas.SchedulePairRead:
     return schemas.SchedulePairRead(

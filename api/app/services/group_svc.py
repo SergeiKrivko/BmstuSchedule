@@ -45,8 +45,8 @@ class GroupSvc(ScheduleMixin):
         department: Optional[str] = None,
         faculty: Optional[str] = None,
         filial: Optional[str] = None,
-        page: int = 1,
-        size: int = 20,
+        page: Optional[int] = None,
+        size: Optional[int] = None,
     ) -> GroupList:
         async with sessionmaker() as session:
             groups, total = await self.group_repo.get_all(

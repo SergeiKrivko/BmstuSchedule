@@ -43,8 +43,8 @@ async def get_groups(
         Optional[str],
         Query(description="Filter groups by filial abbreviation"),
     ] = None,
-    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
-    size: Annotated[int, Query(ge=1, le=100, description="Page size")] = 20,
+    page: Annotated[Optional[int], Query(ge=1, description="Page number")] = None,
+    size: Annotated[Optional[int], Query(ge=1, le=100, description="Page size")] = None,
 ) -> GroupListResponse:
     groups = await group_svc.get_groups(
         sessionmaker,

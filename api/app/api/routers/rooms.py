@@ -27,8 +27,8 @@ async def get_rooms(
         Optional[str],
         Query(description="Filter rooms by building"),
     ] = None,
-    page: int = Query(1, ge=1, description="Page number"),
-    size: int = Query(20, ge=1, le=100, description="Page size"),
+    page: Annotated[Optional[int], Query(ge=1, description="Page number")] = None,
+    size: Annotated[Optional[int], Query(ge=1, le=100, description="Page size")] = None,
 ) -> RoomListResponse:
     rooms = await room_svc.get_rooms(
         sessionmaker=sessionmaker,
