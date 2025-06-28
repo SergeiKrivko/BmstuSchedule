@@ -222,7 +222,7 @@ class LksSynchronizer:
     ) -> Discipline:
         logger.info(f"Syncing discipline {discipline.abbr}")
         unique_field = hashlib.md5(  # noqa: S324  безопасно, т.к. хеш только для поиска
-            f"{discipline.abbr}_{discipline.act_type}".encode(),
+            f"{discipline.full_name}_{discipline.act_type}".encode(),
         ).hexdigest()
         d = self.__synced_disciplines_cache.get(unique_field)
         if d:
@@ -268,7 +268,9 @@ class LksSynchronizer:
             session,
             unique_field,
         )
-        if not sp:
+        if sp:
+            sp.groups = [*sp.groups, group]
+        else:
             sp = SchedulePair(
                 day=day,
                 week=week,
