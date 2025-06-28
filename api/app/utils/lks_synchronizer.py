@@ -269,7 +269,10 @@ class LksSynchronizer:
             unique_field,
         )
         if sp:
-            sp.groups = [*sp.groups, group]
+            for g in sp.groups:
+                if g.id != group.id:
+                    sp.groups = [*sp.groups, group]
+                    break
         else:
             sp = SchedulePair(
                 day=day,

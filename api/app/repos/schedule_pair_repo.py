@@ -24,7 +24,7 @@ class SchedulePairRepo(UniqueFieldRepo[SchedulePair]):
                 joinedload(SchedulePair.groups),
             ),
         )
-        return res.scalar_one_or_none()
+        return res.unique().scalar_one_or_none()
 
 
 @lru_cache(maxsize=1)
