@@ -3,7 +3,6 @@ from typing import Any
 from uuid import UUID
 
 import aiohttp
-from tenacity import retry, stop_after_attempt, wait_exponential
 
 from app.clients.lks.models import (
     CurrentSchedule,
@@ -33,31 +32,16 @@ class LksClient:
         async with self.__get_session() as session, session.get(url) as response:
             return await response.json()
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-        reraise=True,
-    )
     async def get_structure(self) -> StructureNode:
         data = await self._get("structure")
         response = StructureResponseBody.model_validate(data)
         return response.data
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-        reraise=True,
-    )
     async def get_schedule(self, group_id: UUID) -> Schedule:
         data = await self._get(f"schedules/groups/{group_id}/public")
         response = ScheduleResponseBody.model_validate(data)
         return response.data
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-        reraise=True,
-    )
     async def get_current_schedule(self) -> CurrentSchedule:
         data = await self._get("schedules/current")
         response = CurrentScheduleResponseBody.model_validate(data)
