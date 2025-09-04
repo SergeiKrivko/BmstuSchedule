@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from typing import Annotated, Sequence
 
@@ -11,10 +11,25 @@ from app.clients import lks
 from app.core.schedule_manager.helpers import create_concrete_pair
 from app.settings import schedule_manager_settings
 
+MOSCOW_TZ = timezone(timedelta(hours=3))
+
 
 class ScheduleManager:
     def __init__(self, lks_client: lks.LksClient) -> None:
         self.lks_client = lks_client
+
+    @staticmethod
+    def _to_moscow_timezone(dt: datetime) -> datetime:
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc).astimezone(MOSCOW_TZ)
+        if dt.tzinfo != MOSCOW_TZ:
+            return dt.astimezone(MOSCOW_TZ)
+        return dt
+
+    @staticmethod
+    def _normalize_to_moscow_midnight(dt: datetime) -> datetime:
+        moscow_dt = ScheduleManager._to_moscow_timezone(dt)
+        return moscow_dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
     async def generate_concrete_pairs(
         self,
@@ -22,16 +37,19 @@ class ScheduleManager:
         dt_from: datetime,
         dt_to: datetime,
     ) -> list[schemas.SchedulePairRead]:
-        concrete_pairs = []
-        current_date = dt_from.replace(hour=0, minute=0, second=0, microsecond=0)
+        moscow_dt_from = self._to_moscow_timezone(dt_from)
+        moscow_dt_to = self._to_moscow_timezone(dt_to)
 
-        while current_date <= dt_to:
+        concrete_pairs = []
+        current_date = self._normalize_to_moscow_midnight(moscow_dt_from)
+
+        while current_date <= moscow_dt_to:
             concrete_pairs.extend(
                 await self._generate_concrete_pairs_for_date(
                     schedule_pairs,
                     current_date,
-                    dt_from,
-                    dt_to,
+                    moscow_dt_from,
+                    moscow_dt_to,
                 ),
             )
             current_date += timedelta(days=1)

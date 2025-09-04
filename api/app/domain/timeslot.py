@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime  # noqa: TC003
+from datetime import datetime, timedelta, timezone
 
 from pydantic import BaseModel
 
 from app.domain.errors import InvalidTimeFormatError
+
+MOSCOW_TZ = timezone(timedelta(hours=3))
 
 
 class TimeSlot(BaseModel):
@@ -35,12 +37,14 @@ class TimeSlot(BaseModel):
             minute=start_minute,
             second=0,
             microsecond=0,
+            tzinfo=MOSCOW_TZ,
         )
         concrete_end = current_date.replace(
             hour=end_hour,
             minute=end_minute,
             second=0,
             microsecond=0,
+            tzinfo=MOSCOW_TZ,
         )
 
         return TimeSlot(
